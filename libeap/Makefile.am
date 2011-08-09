@@ -59,7 +59,6 @@ CFLAGS += -DCONFIG_CRYPTO_INTERNAL
 CFLAGS += -DCONFIG_TLS_INTERNAL_CLIENT
 CFLAGS += -DCONFIG_TLS_INTERNAL_SERVER
 
-
 UTILS_SRCS = src/utils/base64.c \
 	src/utils/common.c \
 	src/utils/ip_addr.c \
