@@ -31,24 +31,37 @@
  */
 
 /*
- * Local authorization services.
+ *
  */
 
 #include "gssapiP_eap.h"
 
-OM_uint32 GSSAPI_CALLCONV
-gssspi_authorize_localname(OM_uint32 *minor,
-                           const gss_name_t name GSSEAP_UNUSED,
-                           gss_const_buffer_t local_user GSSEAP_UNUSED,
-                           gss_const_OID local_nametype GSSEAP_UNUSED)
+OM_uint32
+gssQueryMechanismInfo(OM_uint32 *minor,
+                      gss_const_OID mech_oid,
+                      unsigned char auth_scheme[16])
 {
-    /*
-     * The MIT mechglue will fallback to comparing names in the absence
-     * of a mechanism implementation of gss_userok. To avoid this and
-     * force the mechglue to use attribute-based authorization, always
-     * return access denied here.
-     */
+    OM_uint32 major;
+    krb5_enctype enctype;
+
+    major = gssEapOidToEnctype(minor, (const gss_OID)mech_oid, &enctype);
+    if (GSS_ERROR(major))
+        return major;
+
+    /* the enctype is encoded in the increasing part of the GUID */
+    memcpy(auth_scheme,
+           "\x39\xd7\x7d\x00\xe5\x00\x11\xe0\xac\x64\xcd\x53\x46\x50\xac\xb9", 16);
+
+    auth_scheme[3] = (unsigned char)enctype;
 
     *minor = 0;
-    return GSS_S_UNAUTHORIZED;
+    return GSS_S_COMPLETE;
+}
+
+OM_uint32 GSSAPI_CALLCONV
+gss_query_mechanism_info(OM_uint32 *minor,
+                         gss_const_OID mech_oid,
+                         unsigned char auth_scheme[16])
+{
+    return gssQueryMechanismInfo(minor, mech_oid, auth_scheme);
 }

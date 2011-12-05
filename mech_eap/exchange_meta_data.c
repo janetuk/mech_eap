@@ -31,24 +31,52 @@
  */
 
 /*
- * Local authorization services.
+ *
  */
 
 #include "gssapiP_eap.h"
 
 OM_uint32 GSSAPI_CALLCONV
-gssspi_authorize_localname(OM_uint32 *minor,
-                           const gss_name_t name GSSEAP_UNUSED,
-                           gss_const_buffer_t local_user GSSEAP_UNUSED,
-                           gss_const_OID local_nametype GSSEAP_UNUSED)
+gssEapExchangeMetaData(OM_uint32 *minor,
+                       gss_const_OID mech GSSEAP_UNUSED,
+                       gss_cred_id_t cred GSSEAP_UNUSED,
+                       gss_ctx_id_t *ctx GSSEAP_UNUSED,
+                       const gss_name_t name GSSEAP_UNUSED,
+                       OM_uint32 req_flags GSSEAP_UNUSED,
+                       gss_const_buffer_t meta_data GSSEAP_UNUSED)
 {
-    /*
-     * The MIT mechglue will fallback to comparing names in the absence
-     * of a mechanism implementation of gss_userok. To avoid this and
-     * force the mechglue to use attribute-based authorization, always
-     * return access denied here.
-     */
-
     *minor = 0;
-    return GSS_S_UNAUTHORIZED;
+    return GSS_S_COMPLETE;
+}
+
+OM_uint32 GSSAPI_CALLCONV
+gss_exchange_meta_data(OM_uint32 *minor,
+                       gss_const_OID mech,
+                       gss_cred_id_t cred,
+                       gss_ctx_id_t *context_handle,
+                       const gss_name_t name,
+                       OM_uint32 req_flags,
+                       gss_const_buffer_t meta_data)
+{
+    gss_ctx_id_t ctx = *context_handle;
+    OM_uint32 major;
+
+    if (cred != GSS_C_NO_CREDENTIAL)
+        GSSEAP_MUTEX_LOCK(&cred->mutex);
+
+    if (*context_handle != GSS_C_NO_CONTEXT)
+        GSSEAP_MUTEX_LOCK(&ctx->mutex);
+
+    major = gssEapExchangeMetaData(minor, mech, cred, &ctx,
+                                   name, req_flags, meta_data);
+
+    if (*context_handle != GSS_C_NO_CONTEXT)
+        GSSEAP_MUTEX_UNLOCK(&ctx->mutex);
+    else
+        *context_handle = ctx;
+
+    if (cred != GSS_C_NO_CREDENTIAL)
+        GSSEAP_MUTEX_UNLOCK(&cred->mutex);
+
+    return major;
 }
