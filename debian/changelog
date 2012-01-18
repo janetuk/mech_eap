@@ -1,4 +1,4 @@
-moonshot-gss-eap (0.1+20111207-4) unstable; urgency=low
+moonshot-gss-eap (0.1+20111207-5) unstable; urgency=low
 
   * Fix rest of subject name constraints
 
