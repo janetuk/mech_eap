@@ -132,10 +132,10 @@ cleanup:
 static int stringEmpty(const char * s)
 {
     if (s == NULL)
-	return 0;
+      return 1;
     if (strlen(s) > 0)
-	return 1;
-    return 0;
+	return 0;
+    return 1;
 }
 
 OM_uint32
