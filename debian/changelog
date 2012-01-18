@@ -1,3 +1,9 @@
+moonshot-gss-eap (0.1+20111207-4) unstable; urgency=low
+
+  * Fix rest of subject name constraints
+
+ -- Sam Hartman <hartmans@debian.org>  Wed, 18 Jan 2012 08:12:30 -0500
+
 moonshot-gss-eap (0.1+20111207-3) unstable; urgency=low
 
   * Fix empty certhash (LP: #917956)
