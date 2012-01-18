@@ -1,3 +1,9 @@
+moonshot-gss-eap (0.1+20111207-3) unstable; urgency=low
+
+  * Fix empty certhash (LP: #917956)
+
+ -- Sam Hartman <hartmans@debian.org>  Tue, 17 Jan 2012 19:28:31 -0500
+
 moonshot-gss-eap (0.1+20111207-2) unstable; urgency=low
 
   * Initialize shib resolver before opensaml
