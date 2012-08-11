@@ -214,7 +214,7 @@ importName(OM_uint32 *minor,
            size_t *pRemain,
            gss_name_t *pName)
 {
-    OM_uint32 major, tmpMinor;
+    OM_uint32 major, tmpMinor, flags;
     unsigned char *p = *pBuf;
     size_t remain = *pRemain;
     gss_buffer_desc tmp;
@@ -233,16 +233,15 @@ importName(OM_uint32 *minor,
 
         tmp.value = p + 4;
 
-        major = gssEapImportNameInternal(minor, &tmp, pName,
-                                         EXPORT_NAME_FLAG_COMPOSITE);
+        flags = EXPORT_NAME_FLAG_COMPOSITE;
+        if (mech == GSS_C_NO_OID)
+            flags |= EXPORT_NAME_FLAG_OID;
+
+        major = gssEapImportNameInternal(minor, &tmp, pName, flags);
         if (GSS_ERROR(major))
             return major;
 
-        /*
-         * If the OID was omitted (as it is for initiator names), use the
-         * context mechanism OID.
-         */
-        if ((*pName)->mechanismUsed == GSS_C_NO_OID) {
+        if ((flags & EXPORT_NAME_FLAG_OID) == 0) {
             major = gssEapCanonicalizeOid(minor, mech, 0, &(*pName)->mechanismUsed);
             if (GSS_ERROR(major)) {
                 gssEapReleaseName(&tmpMinor, pName);
@@ -306,7 +305,7 @@ gssEapImportContext(OM_uint32 *minor,
     if (GSS_ERROR(major))
         return major;
 
-    major = importName(minor, ctx->mechanismUsed, &p, &remain, &ctx->acceptorName);
+    major = importName(minor, GSS_C_NO_OID, &p, &remain, &ctx->acceptorName);
     if (GSS_ERROR(major))
         return major;
 
