@@ -238,7 +238,11 @@ importName(OM_uint32 *minor,
         if (GSS_ERROR(major))
             return major;
 
-        if (mech != GSS_C_NO_OID) {
+        /*
+         * If the OID was omitted (as it is for initiator names), use the
+         * context mechanism OID.
+         */
+        if ((*pName)->mechanismUsed == GSS_C_NO_OID) {
             major = gssEapCanonicalizeOid(minor, mech, 0, &(*pName)->mechanismUsed);
             if (GSS_ERROR(major)) {
                 gssEapReleaseName(&tmpMinor, pName);
@@ -302,7 +306,7 @@ gssEapImportContext(OM_uint32 *minor,
     if (GSS_ERROR(major))
         return major;
 
-    major = importName(minor, GSS_C_NO_OID, &p, &remain, &ctx->acceptorName);
+    major = importName(minor, ctx->mechanismUsed, &p, &remain, &ctx->acceptorName);
     if (GSS_ERROR(major))
         return major;
 
