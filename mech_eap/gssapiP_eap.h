@@ -90,28 +90,11 @@ typedef const gss_OID_desc *gss_const_OID;
 #include <wpabuf.h>
 
 #ifdef GSSEAP_ENABLE_ACCEPTOR
-/* FreeRADIUS headers */
-#ifdef __cplusplus
-extern "C" {
-#ifndef WIN32
-#define operator fr_operator
-#endif
-#endif
-#include <freeradius/libradius.h>
-#include <freeradius/radius.h>
-
-#undef pid_t
-
 /* libradsec headers */
 #include <radsec/radsec.h>
 #include <radsec/request.h>
-#ifdef __cplusplus
-#ifndef WIN32
-#undef operator
+#include <radsec/radius.h>
 #endif
-}
-#endif
-#endif /* GSSEAP_ENABLE_ACCEPTOR */
 
 #include "gsseap_err.h"
 #include "radsec_err.h"
@@ -178,6 +161,7 @@ struct gss_cred_id_struct
 
 #define CTX_FLAG_INITIATOR                  0x00000001
 #define CTX_FLAG_KRB_REAUTH                 0x00000002
+#define CTX_FLAG_CHANNEL_BINDINGS_VERIFIED  0x00000004
 
 #define CTX_IS_INITIATOR(ctx)               (((ctx)->flags & CTX_FLAG_INITIATOR) != 0)
 
@@ -208,7 +192,7 @@ struct gss_eap_acceptor_ctx {
     struct rs_connection *radConn;
     char *radServer;
     gss_buffer_desc state;
-    VALUE_PAIR *vps;
+    rs_avp *vps;
 };
 #endif
 
@@ -256,6 +240,10 @@ struct gss_ctx_id_struct
 #define KEY_USAGE_ACCEPTOR_SIGN             23
 #define KEY_USAGE_INITIATOR_SEAL            24
 #define KEY_USAGE_INITIATOR_SIGN            25
+
+#define KEY_USAGE_GSSEAP_CHBIND_MIC         60
+#define KEY_USAGE_GSSEAP_ACCTOKEN_MIC       61
+#define KEY_USAGE_GSSEAP_INITOKEN_MIC       62
 
 /* accept_sec_context.c */
 OM_uint32
@@ -338,9 +326,12 @@ gssEapDisplayStatus(OM_uint32 *minor,
 #define IS_WIRE_ERROR(err)              ((err) > GSSEAP_RESERVED && \
                                          (err) <= GSSEAP_RADIUS_PROT_FAILURE)
 
-/* upper bound of RADIUS error range must be kept in sync with radsec.h */
+#ifdef GSSEAP_ENABLE_ACCEPTOR
 #define IS_RADIUS_ERROR(err)            ((err) >= ERROR_TABLE_BASE_rse && \
-                                         (err) <= ERROR_TABLE_BASE_rse + 20)
+                                         (err) <= ERROR_TABLE_BASE_rse + RSE_MAX)
+#else
+#define IS_RADIUS_ERROR(err)            (0)
+#endif
 
 /* exchange_meta_data.c */
 OM_uint32 GSSAPI_CALLCONV
@@ -377,7 +368,6 @@ gssEapPseudoRandom(OM_uint32 *minor,
                    gss_ctx_id_t ctx,
                    int prf_key,
                    const gss_buffer_t prf_in,
-                   ssize_t desired_output_len,
                    gss_buffer_t prf_out);
 
 /* query_mechanism_info.c */

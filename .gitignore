@@ -1,3 +1,5 @@
 autom4te.cache
 mech_eap.spec
 mech_eap*tar*
+*.lo
+*#

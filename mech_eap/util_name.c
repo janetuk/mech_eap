@@ -60,8 +60,8 @@
 #include "gssapiP_eap.h"
 
 static gss_OID_desc gssEapNtEapName = {
-    /* 1.3.6.1.4.1.5322.22.2.1  */
-    10, "\x2B\x06\x01\x04\x01\xA9\x4A\x16\x02\x01"
+    /* 1.3.6.1.5.5.15.2.1 */
+    8, "\x2B\x06\x01\x05\x05\x0f\x02\x01"
 };
 
 gss_OID GSS_EAP_NT_EAP_NAME = &gssEapNtEapName;
@@ -702,6 +702,20 @@ gssEapDuplicateName(OM_uint32 *minor,
                                   GSS_C_NO_OID, dest_name);
 }
 
+static int
+hasRealmP(gss_name_t name)
+{
+#ifdef HAVE_HEIMDAL_VERSION
+    if (KRB_PRINC_REALM(name->krbPrincipal) != NULL &&
+        KRB_PRINC_REALM(name->krbPrincipal)[0] != '\0')
+#else
+    if (KRB_PRINC_REALM(name->krbPrincipal)->length != 0)
+#endif
+        return TRUE;
+
+    return FALSE;
+}
+
 OM_uint32
 gssEapDisplayName(OM_uint32 *minor,
                   gss_name_t name,
@@ -728,12 +742,7 @@ gssEapDisplayName(OM_uint32 *minor,
      * According to draft-ietf-abfab-gss-eap-01, when the realm is
      * absent the trailing '@' is not included.
      */
-#ifdef HAVE_HEIMDAL_VERSION
-    if (KRB_PRINC_REALM(name->krbPrincipal) == NULL ||
-        KRB_PRINC_REALM(name->krbPrincipal)[0] == '\0')
-#else
-    if (KRB_PRINC_REALM(name->krbPrincipal)->length == 0)
-#endif
+    if (!hasRealmP(name))
         flags |= KRB5_PRINCIPAL_UNPARSE_NO_REALM;
 
     *minor = krb5_unparse_name_flags(krbContext, name->krbPrincipal,
@@ -768,6 +777,7 @@ OM_uint32
 gssEapCompareName(OM_uint32 *minor,
                   gss_name_t name1,
                   gss_name_t name2,
+                  OM_uint32 flags,
                   int *name_equal)
 {
     krb5_context krbContext;
@@ -780,9 +790,18 @@ gssEapCompareName(OM_uint32 *minor,
         GSSEAP_KRB_INIT(&krbContext);
 
         /* krbPrincipal is immutable, so lock not required */
-        *name_equal = krb5_principal_compare(krbContext,
-                                             name1->krbPrincipal,
-                                             name2->krbPrincipal);
+        if ((flags & COMPARE_NAME_FLAG_IGNORE_EMPTY_REALMS) &&
+            (hasRealmP(name1) == FALSE || hasRealmP(name2) == FALSE)) {
+            *name_equal = krb5_principal_compare_any_realm(krbContext,
+                                                           name1->krbPrincipal,
+                                                           name2->krbPrincipal);
+        } else {
+            *name_equal = krb5_principal_compare(krbContext,
+                                                 name1->krbPrincipal,
+                                                 name2->krbPrincipal);
+        }
+    } else {
+        *name_equal = 0;
     }
 
     return GSS_S_COMPLETE;

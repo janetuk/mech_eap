@@ -59,7 +59,7 @@ static OM_uint32
 acceptReadyEap(OM_uint32 *minor, gss_ctx_id_t ctx, gss_cred_id_t cred)
 {
     OM_uint32 major, tmpMinor;
-    VALUE_PAIR *vp;
+    rs_const_avp *vp;
     gss_buffer_desc nameBuf = GSS_C_EMPTY_BUFFER;
 
     /* Cache encryption type derived from selected mechanism OID */
@@ -72,9 +72,10 @@ acceptReadyEap(OM_uint32 *minor, gss_ctx_id_t ctx, gss_cred_id_t cred)
 
     major = gssEapRadiusGetRawAvp(minor, ctx->acceptorCtx.vps,
                                   PW_USER_NAME, 0, &vp);
-    if (major == GSS_S_COMPLETE && vp->length) {
-        nameBuf.length = vp->length;
-        nameBuf.value = vp->vp_strvalue;
+    if (major == GSS_S_COMPLETE && rs_avp_length(vp) != 0) {
+        rs_avp_octets_value_byref((rs_avp *)vp,
+                                  (unsigned char **)&nameBuf.value,
+                                  &nameBuf.length);
     } else {
         ctx->gssFlags |= GSS_C_ANON_FLAG;
     }
@@ -88,15 +89,15 @@ acceptReadyEap(OM_uint32 *minor, gss_ctx_id_t ctx, gss_cred_id_t cred)
         return major;
 
     major = gssEapRadiusGetRawAvp(minor, ctx->acceptorCtx.vps,
-                                  PW_MS_MPPE_SEND_KEY, VENDORPEC_MS, &vp);
+                                  PW_MS_MPPE_SEND_KEY, VENDORPEC_MICROSOFT, &vp);
     if (GSS_ERROR(major)) {
         *minor = GSSEAP_KEY_UNAVAILABLE;
         return GSS_S_UNAVAILABLE;
     }
 
     major = gssEapDeriveRfc3961Key(minor,
-                                   vp->vp_octets,
-                                   vp->length,
+                                   rs_avp_octets_value_const_ptr(vp),
+                                   rs_avp_length(vp),
                                    ctx->encryptionType,
                                    &ctx->rfc3961Key);
     if (GSS_ERROR(major))
@@ -287,7 +288,7 @@ importInitiatorIdentity(OM_uint32 *minor,
 static OM_uint32
 setInitiatorIdentity(OM_uint32 *minor,
                      gss_ctx_id_t ctx,
-                     VALUE_PAIR **vps)
+                     struct rs_packet *req)
 {
     OM_uint32 major, tmpMinor;
     gss_buffer_desc nameBuf;
@@ -303,7 +304,7 @@ setInitiatorIdentity(OM_uint32 *minor,
         if (GSS_ERROR(major))
             return major;
 
-        major = gssEapRadiusAddAvp(minor, vps, PW_USER_NAME, 0, &nameBuf);
+        major = gssEapRadiusAddAvp(minor, req, PW_USER_NAME, 0, &nameBuf);
         if (GSS_ERROR(major))
             return major;
 
@@ -320,7 +321,7 @@ setInitiatorIdentity(OM_uint32 *minor,
 static OM_uint32
 setAcceptorIdentity(OM_uint32 *minor,
                     gss_ctx_id_t ctx,
-                    VALUE_PAIR **vps)
+                    struct rs_packet *req)
 {
     OM_uint32 major;
     gss_buffer_desc nameBuf;
@@ -349,9 +350,9 @@ setAcceptorIdentity(OM_uint32 *minor,
     /* Acceptor-Service-Name */
     krbPrincComponentToGssBuffer(krbPrinc, 0, &nameBuf);
 
-    major = gssEapRadiusAddAvp(minor, vps,
+    major = gssEapRadiusAddAvp(minor, req,
                                PW_GSS_ACCEPTOR_SERVICE_NAME,
-                               VENDORPEC_UKERNA,
+                               0,
                                &nameBuf);
     if (GSS_ERROR(major))
         return major;
@@ -359,9 +360,9 @@ setAcceptorIdentity(OM_uint32 *minor,
     /* Acceptor-Host-Name */
     krbPrincComponentToGssBuffer(krbPrinc, 1, &nameBuf);
 
-    major = gssEapRadiusAddAvp(minor, vps,
+    major = gssEapRadiusAddAvp(minor, req,
                                PW_GSS_ACCEPTOR_HOST_NAME,
-                               VENDORPEC_UKERNA,
+                               0,
                                &nameBuf);
     if (GSS_ERROR(major))
         return major;
@@ -382,9 +383,9 @@ setAcceptorIdentity(OM_uint32 *minor,
         nameBuf.value = ssi;
         nameBuf.length = strlen(ssi);
 
-        major = gssEapRadiusAddAvp(minor, vps,
-                                   PW_GSS_ACCEPTOR_SERVICE_SPECIFIC,
-                                   VENDORPEC_UKERNA,
+        major = gssEapRadiusAddAvp(minor, req,
+                                   PW_GSS_ACCEPTOR_SERVICE_SPECIFICS,
+                                   0,
                                    &nameBuf);
 
         if (GSS_ERROR(major)) {
@@ -397,9 +398,9 @@ setAcceptorIdentity(OM_uint32 *minor,
     krbPrincRealmToGssBuffer(krbPrinc, &nameBuf);
     if (nameBuf.length != 0) {
         /* Acceptor-Realm-Name */
-        major = gssEapRadiusAddAvp(minor, vps,
+        major = gssEapRadiusAddAvp(minor, req,
                                    PW_GSS_ACCEPTOR_REALM_NAME,
-                                   VENDORPEC_UKERNA,
+                                   0,
                                    &nameBuf);
         if (GSS_ERROR(major))
             return major;
@@ -469,7 +470,7 @@ eapGssSmAcceptAuthenticate(OM_uint32 *minor,
     struct rs_connection *rconn;
     struct rs_request *request = NULL;
     struct rs_packet *req = NULL, *resp = NULL;
-    struct radius_packet *frreq, *frresp;
+    int isAccessChallenge;
 
     if (ctx->acceptorCtx.radContext == NULL) {
         /* May be NULL from an imported partial context */
@@ -490,23 +491,22 @@ eapGssSmAcceptAuthenticate(OM_uint32 *minor,
         major = gssEapRadiusMapError(minor, rs_err_conn_pop(rconn));
         goto cleanup;
     }
-    frreq = rs_packet_frpkt(req);
 
-    major = setInitiatorIdentity(minor, ctx, &frreq->vps);
+    major = setInitiatorIdentity(minor, ctx, req);
     if (GSS_ERROR(major))
         goto cleanup;
 
-    major = setAcceptorIdentity(minor, ctx, &frreq->vps);
+    major = setAcceptorIdentity(minor, ctx, req);
     if (GSS_ERROR(major))
         goto cleanup;
 
-    major = gssEapRadiusAddAvp(minor, &frreq->vps,
+    major = gssEapRadiusAddAvp(minor, req,
                                PW_EAP_MESSAGE, 0, inputToken);
     if (GSS_ERROR(major))
         goto cleanup;
 
     if (ctx->acceptorCtx.state.length != 0) {
-        major = gssEapRadiusAddAvp(minor, &frreq->vps, PW_STATE, 0,
+        major = gssEapRadiusAddAvp(minor, req, PW_STATE, 0,
                                    &ctx->acceptorCtx.state);
         if (GSS_ERROR(major))
             goto cleanup;
@@ -529,12 +529,15 @@ eapGssSmAcceptAuthenticate(OM_uint32 *minor,
 
     GSSEAP_ASSERT(resp != NULL);
 
-    frresp = rs_packet_frpkt(resp);
-    switch (frresp->code) {
+    isAccessChallenge = 0;
+
+    switch (rs_packet_code(resp)) {
     case PW_ACCESS_CHALLENGE:
-    case PW_AUTHENTICATION_ACK:
+        isAccessChallenge = 1;
         break;
-    case PW_AUTHENTICATION_REJECT:
+    case PW_ACCESS_ACCEPT:
+        break;
+    case PW_ACCESS_REJECT:
         *minor = GSSEAP_RADIUS_AUTH_FAILURE;
         major = GSS_S_DEFECTIVE_CREDENTIAL;
         goto cleanup;
@@ -546,23 +549,27 @@ eapGssSmAcceptAuthenticate(OM_uint32 *minor,
         break;
     }
 
-    major = gssEapRadiusGetAvp(minor, frresp->vps, PW_EAP_MESSAGE, 0,
+    major = gssEapRadiusGetAvp(minor, resp, PW_EAP_MESSAGE, 0,
                                outputToken, TRUE);
-    if (major == GSS_S_UNAVAILABLE && frresp->code == PW_ACCESS_CHALLENGE) {
+    if (major == GSS_S_UNAVAILABLE && isAccessChallenge) {
         *minor = GSSEAP_MISSING_EAP_REQUEST;
         major = GSS_S_DEFECTIVE_TOKEN;
         goto cleanup;
     } else if (GSS_ERROR(major))
         goto cleanup;
 
-    if (frresp->code == PW_ACCESS_CHALLENGE) {
-        major = gssEapRadiusGetAvp(minor, frresp->vps, PW_STATE, 0,
+    if (isAccessChallenge) {
+        major = gssEapRadiusGetAvp(minor, resp, PW_STATE, 0,
                                    &ctx->acceptorCtx.state, TRUE);
         if (GSS_ERROR(major) && *minor != GSSEAP_NO_SUCH_ATTR)
             goto cleanup;
     } else {
-        ctx->acceptorCtx.vps = frresp->vps;
-        frresp->vps = NULL;
+        rs_avp **vps;
+
+        rs_packet_avps(resp, &vps);
+
+        ctx->acceptorCtx.vps = *vps;
+        *vps = NULL;
 
         major = acceptReadyEap(minor, ctx, cred);
         if (GSS_ERROR(major))
@@ -639,39 +646,41 @@ eapGssSmAcceptGssChannelBindings(OM_uint32 *minor,
                                  gss_buffer_t outputToken GSSEAP_UNUSED,
                                  OM_uint32 *smFlags GSSEAP_UNUSED)
 {
-    OM_uint32 major;
-    gss_iov_buffer_desc iov[2];
+    krb5_error_code code;
+    krb5_context krbContext;
+    krb5_data data;
+    krb5_checksum cksum;
+    krb5_boolean valid = FALSE;
 
-    iov[0].type = GSS_IOV_BUFFER_TYPE_DATA | GSS_IOV_BUFFER_FLAG_ALLOCATE;
-    iov[0].buffer.length = 0;
-    iov[0].buffer.value = NULL;
+    if (chanBindings == GSS_C_NO_CHANNEL_BINDINGS ||
+        chanBindings->application_data.length == 0)
+        return GSS_S_CONTINUE_NEEDED;
 
-    iov[1].type = GSS_IOV_BUFFER_TYPE_STREAM | GSS_IOV_BUFFER_FLAG_ALLOCATED;
+    GSSEAP_KRB_INIT(&krbContext);
 
-    /* XXX necessary because decrypted in place and we verify it later */
-    major = duplicateBuffer(minor, inputToken, &iov[1].buffer);
-    if (GSS_ERROR(major))
-        return major;
+    KRB_DATA_INIT(&data);
 
-    major = gssEapUnwrapOrVerifyMIC(minor, ctx, NULL, NULL,
-                                    iov, 2, TOK_TYPE_WRAP);
-    if (GSS_ERROR(major)) {
-        gssEapReleaseIov(iov, 2);
-        return major;
+    gssBufferToKrbData(&chanBindings->application_data, &data);
+
+    KRB_CHECKSUM_INIT(&cksum, ctx->checksumType, inputToken);
+
+    code = krb5_c_verify_checksum(krbContext, &ctx->rfc3961Key,
+                                  KEY_USAGE_GSSEAP_CHBIND_MIC,
+                                  &data, &cksum, &valid);
+    if (code != 0) {
+        *minor = code;
+        return GSS_S_FAILURE;
     }
 
-    if (chanBindings != GSS_C_NO_CHANNEL_BINDINGS &&
-        !bufferEqual(&iov[0].buffer, &chanBindings->application_data)) {
-        major = GSS_S_BAD_BINDINGS;
+    if (valid == FALSE) {
         *minor = GSSEAP_BINDINGS_MISMATCH;
-    } else {
-        major = GSS_S_CONTINUE_NEEDED;
-        *minor = 0;
+        return GSS_S_BAD_BINDINGS;
     }
 
-    gssEapReleaseIov(iov, 2);
+    ctx->flags |= CTX_FLAG_CHANNEL_BINDINGS_VERIFIED;
 
-    return major;
+    *minor = 0;
+    return GSS_S_CONTINUE_NEEDED;
 }
 
 static OM_uint32
@@ -682,12 +691,26 @@ eapGssSmAcceptInitiatorMIC(OM_uint32 *minor,
                            gss_OID mech GSSEAP_UNUSED,
                            OM_uint32 reqFlags GSSEAP_UNUSED,
                            OM_uint32 timeReq GSSEAP_UNUSED,
-                           gss_channel_bindings_t chanBindings GSSEAP_UNUSED,
+                           gss_channel_bindings_t chanBindings,
                            gss_buffer_t inputToken,
                            gss_buffer_t outputToken GSSEAP_UNUSED,
                            OM_uint32 *smFlags GSSEAP_UNUSED)
 {
     OM_uint32 major;
+
+    /*
+     * The channel binding token is optional, however if the caller indicated
+     * bindings we must raise an error if it was absent.
+     *
+     * In the future, we might use a context option to allow the caller to
+     * indicate that missing bindings are acceptable.
+     */
+    if (chanBindings != NULL &&
+        chanBindings->application_data.length != 0 &&
+        (ctx->flags & CTX_FLAG_CHANNEL_BINDINGS_VERIFIED) == 0) {
+        *minor = GSSEAP_MISSING_BINDINGS;
+        return GSS_S_BAD_BINDINGS;
+    }
 
     major = gssEapVerifyTokenMIC(minor, ctx, inputToken);
     if (GSS_ERROR(major))
@@ -807,7 +830,7 @@ static struct gss_eap_sm eapGssAcceptorSm[] = {
         ITOK_TYPE_GSS_CHANNEL_BINDINGS,
         ITOK_TYPE_NONE,
         GSSEAP_STATE_INITIATOR_EXTS,
-        SM_ITOK_FLAG_REQUIRED,
+        0,
         eapGssSmAcceptGssChannelBindings,
     },
     {
@@ -826,6 +849,13 @@ static struct gss_eap_sm eapGssAcceptorSm[] = {
         eapGssSmAcceptReauthCreds,
     },
 #endif
+    {
+        ITOK_TYPE_NONE,
+        ITOK_TYPE_ACCEPTOR_NAME_RESP,
+        GSSEAP_STATE_ACCEPTOR_EXTS,
+        0,
+        eapGssSmAcceptAcceptorName
+    },
     {
         ITOK_TYPE_NONE,
         ITOK_TYPE_ACCEPTOR_MIC,

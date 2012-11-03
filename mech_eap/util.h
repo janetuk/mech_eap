@@ -73,7 +73,9 @@
 #include <krb5.h>
 
 #ifdef WIN32
-#define inline __inline
+# ifndef __cplusplus
+# define inline __inline
+# endif
 #define snprintf _snprintf
 #endif
 
@@ -379,6 +381,16 @@ gssEapDeriveRfc3961Key(OM_uint32 *minor,
 
 #define KRB_DATA_INIT(d)        krb5_data_zero((d))
 
+#define KRB_CHECKSUM_TYPE(c)    ((c)->cksumtype)
+#define KRB_CHECKSUM_LENGTH(c)  ((c)->checksum.length)
+#define KRB_CHECKSUM_DATA(c)    ((c)->checksum.data)
+
+#define KRB_CHECKSUM_INIT(cksum, type, d)      do { \
+        (cksum)->cksumtype = (type);                \
+        (cksum)->checksum.length = (d)->length;     \
+        (cksum)->checksum.data = (d)->value;        \
+    } while (0)
+
 #else
 
 #define KRB_TIME_FOREVER        KRB5_INT32_MAX
@@ -401,6 +413,16 @@ gssEapDeriveRfc3961Key(OM_uint32 *minor,
         (d)->magic = KV5M_DATA;             \
         (d)->length = 0;                    \
         (d)->data = NULL;                   \
+    } while (0)
+
+#define KRB_CHECKSUM_TYPE(c)    ((c)->checksum_type)
+#define KRB_CHECKSUM_LENGTH(c)  ((c)->length)
+#define KRB_CHECKSUM_DATA(c)    ((c)->contents)
+
+#define KRB_CHECKSUM_INIT(cksum, type, d)      do { \
+        (cksum)->checksum_type = (type);            \
+        (cksum)->length = (d)->length;              \
+        (cksum)->contents = (d)->value;             \
     } while (0)
 
 #endif /* HAVE_HEIMDAL_VERSION */
@@ -591,10 +613,13 @@ gssEapDisplayName(OM_uint32 *minor,
                   gss_buffer_t output_name_buffer,
                   gss_OID *output_name_type);
 
+#define COMPARE_NAME_FLAG_IGNORE_EMPTY_REALMS   0x1
+
 OM_uint32
 gssEapCompareName(OM_uint32 *minor,
                   gss_name_t name1,
                   gss_name_t name2,
+                  OM_uint32 flags,
                   int *name_equal);
 
 /* util_oid.c */
