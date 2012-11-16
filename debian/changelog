@@ -1,3 +1,9 @@
+moonshot-gss-eap (0.1+20121103-2) unstable; urgency=low
+
+  * Pull in upstream changes for empty acceptor name
+
+ -- Sam Hartman <hartmans@debian.org>  Thu, 15 Nov 2012 22:12:11 -0500
+
 moonshot-gss-eap (0.1+20121103-1) unstable; urgency=low
 
   * New upstream version; 1.0 candidate
