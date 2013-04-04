@@ -589,10 +589,10 @@ eapGssSmInitAcceptorName(OM_uint32 *minor,
             gssEapReleaseName(&tmpMinor, &nameHint);
 
             if (!equal) {
-	      *minor = GSSEAP_WRONG_ACCEPTOR_NAME;
+                *minor = GSSEAP_WRONG_ACCEPTOR_NAME;
                 return GSS_S_DEFECTIVE_TOKEN;
             }
-        } else {
+        } else { /* acceptor name is no_name */
             /* accept acceptor name hint */
             ctx->acceptorName = nameHint;
             nameHint = GSS_C_NO_NAME;
