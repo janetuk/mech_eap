@@ -1,5 +1,5 @@
-AC_PREREQ([2.61])
-AC_INIT([mech_eap], [0.1], [bugs@project-moonshot.org])
+/AC_PREREQ([2.61])
+AC_INIT([mech_eap], [0.9], [bugs@project-moonshot.org])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
 
@@ -80,6 +80,8 @@ AM_CONDITIONAL(SHIBRESOLVER, test "x_$check_shibresolver_dir" != "x_no")
 if test x_$found_shibresolver = x_yes; then
   AX_CHECK_SHIBSP
 fi
+
+AX_CHECK_OPENSSL
 
 if test "x$acceptor" = "xyes" ; then
   AX_CHECK_RADSEC

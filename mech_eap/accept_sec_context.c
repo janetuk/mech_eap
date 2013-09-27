@@ -369,29 +369,16 @@ setAcceptorIdentity(OM_uint32 *minor,
 
     if (KRB_PRINC_LENGTH(krbPrinc) > 2) {
         /* Acceptor-Service-Specific */
-        krb5_principal_data ssiPrinc = *krbPrinc;
-        char *ssi;
-
-        KRB_PRINC_LENGTH(&ssiPrinc) -= 2;
-        KRB_PRINC_NAME(&ssiPrinc) += 2;
-
-        *minor = krb5_unparse_name_flags(krbContext, &ssiPrinc,
-                                         KRB5_PRINCIPAL_UNPARSE_NO_REALM, &ssi);
+        *minor = krbPrincUnparseServiceSpecifics(krbContext,
+                                                 krbPrinc, &nameBuf);
         if (*minor != 0)
             return GSS_S_FAILURE;
-
-        nameBuf.value = ssi;
-        nameBuf.length = strlen(ssi);
 
         major = gssEapRadiusAddAvp(minor, req,
                                    PW_GSS_ACCEPTOR_SERVICE_SPECIFICS,
                                    0,
                                    &nameBuf);
-#ifdef HAVE_HEIMDAL_VERSION
-        krb5_xfree(ssi);
-#else
-        krb5_free_unparsed_name(krbContext, ssi);
-#endif
+	krbFreeUnparsedName(krbContext, &nameBuf);
         if (GSS_ERROR(major))
             return major;
     }
