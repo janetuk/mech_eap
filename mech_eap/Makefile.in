@@ -53,8 +53,7 @@ host_triplet = @host@
 @GSSEAP_ENABLE_ACCEPTOR_TRUE@	set_name_attribute.c			\
 @GSSEAP_ENABLE_ACCEPTOR_TRUE@	util_attr.cpp				\
 @GSSEAP_ENABLE_ACCEPTOR_TRUE@	util_base64.c				\
-@GSSEAP_ENABLE_ACCEPTOR_TRUE@	util_json.cpp				\
-@GSSEAP_ENABLE_ACCEPTOR_TRUE@	util_radius.cpp
+@GSSEAP_ENABLE_ACCEPTOR_TRUE@	util_json.cpp
 
 @GSSEAP_ENABLE_ACCEPTOR_TRUE@@OPENSAML_TRUE@am__append_9 = util_saml.cpp
 @GSSEAP_ENABLE_ACCEPTOR_TRUE@@SHIBRESOLVER_TRUE@am__append_10 = util_shib.cpp
@@ -119,15 +118,16 @@ am__mech_eap_la_SOURCES_DIST = acquire_cred.c \
 	store_cred.c unwrap.c unwrap_iov.c util_buffer.c \
 	util_context.c util_cksum.c util_cred.c util_crypt.c \
 	util_krb.c util_lucid.c util_mech.c util_name.c util_oid.c \
-	util_ordering.c util_sm.c util_tld.c util_token.c verify_mic.c \
-	wrap.c wrap_iov.c wrap_iov_length.c wrap_size_limit.c \
-	gssapiP_eap.h util_attr.h util_base64.h util.h util_json.h \
-	util_radius.h util_reauth.h util_saml.h util_shib.h \
-	util_moonshot.c accept_sec_context.c delete_name_attribute.c \
-	export_name_composite.c get_name_attribute.c inquire_name.c \
-	map_name_to_any.c release_any_name_mapping.c \
-	set_name_attribute.c util_attr.cpp util_base64.c util_json.cpp \
-	util_radius.cpp util_saml.cpp util_shib.cpp util_reauth.c
+	util_ordering.c util_radius.cpp util_sm.c util_tld.c \
+	util_token.c verify_mic.c wrap.c wrap_iov.c wrap_iov_length.c \
+	wrap_size_limit.c gssapiP_eap.h util_attr.h util_base64.h \
+	util.h util_json.h util_radius.h util_reauth.h util_saml.h \
+	util_shib.h util_moonshot.c accept_sec_context.c \
+	delete_name_attribute.c export_name_composite.c \
+	get_name_attribute.c inquire_name.c map_name_to_any.c \
+	release_any_name_mapping.c set_name_attribute.c util_attr.cpp \
+	util_base64.c util_json.cpp util_saml.cpp util_shib.cpp \
+	util_reauth.c
 @LIBMOONSHOT_TRUE@am__objects_1 = mech_eap_la-util_moonshot.lo
 @GSSEAP_ENABLE_ACCEPTOR_TRUE@am__objects_2 = mech_eap_la-accept_sec_context.lo \
 @GSSEAP_ENABLE_ACCEPTOR_TRUE@	mech_eap_la-delete_name_attribute.lo \
@@ -139,8 +139,7 @@ am__mech_eap_la_SOURCES_DIST = acquire_cred.c \
 @GSSEAP_ENABLE_ACCEPTOR_TRUE@	mech_eap_la-set_name_attribute.lo \
 @GSSEAP_ENABLE_ACCEPTOR_TRUE@	mech_eap_la-util_attr.lo \
 @GSSEAP_ENABLE_ACCEPTOR_TRUE@	mech_eap_la-util_base64.lo \
-@GSSEAP_ENABLE_ACCEPTOR_TRUE@	mech_eap_la-util_json.lo \
-@GSSEAP_ENABLE_ACCEPTOR_TRUE@	mech_eap_la-util_radius.lo
+@GSSEAP_ENABLE_ACCEPTOR_TRUE@	mech_eap_la-util_json.lo
 @GSSEAP_ENABLE_ACCEPTOR_TRUE@@OPENSAML_TRUE@am__objects_3 = mech_eap_la-util_saml.lo
 @GSSEAP_ENABLE_ACCEPTOR_TRUE@@SHIBRESOLVER_TRUE@am__objects_4 = mech_eap_la-util_shib.lo
 @GSSEAP_ENABLE_REAUTH_TRUE@am__objects_5 = mech_eap_la-util_reauth.lo
@@ -180,12 +179,13 @@ am_mech_eap_la_OBJECTS = mech_eap_la-acquire_cred.lo \
 	mech_eap_la-util_krb.lo mech_eap_la-util_lucid.lo \
 	mech_eap_la-util_mech.lo mech_eap_la-util_name.lo \
 	mech_eap_la-util_oid.lo mech_eap_la-util_ordering.lo \
-	mech_eap_la-util_sm.lo mech_eap_la-util_tld.lo \
-	mech_eap_la-util_token.lo mech_eap_la-verify_mic.lo \
-	mech_eap_la-wrap.lo mech_eap_la-wrap_iov.lo \
-	mech_eap_la-wrap_iov_length.lo mech_eap_la-wrap_size_limit.lo \
-	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
-	$(am__objects_4) $(am__objects_5)
+	mech_eap_la-util_radius.lo mech_eap_la-util_sm.lo \
+	mech_eap_la-util_tld.lo mech_eap_la-util_token.lo \
+	mech_eap_la-verify_mic.lo mech_eap_la-wrap.lo \
+	mech_eap_la-wrap_iov.lo mech_eap_la-wrap_iov_length.lo \
+	mech_eap_la-wrap_size_limit.lo $(am__objects_1) \
+	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
+	$(am__objects_5)
 mech_eap_la_OBJECTS = $(am_mech_eap_la_OBJECTS)
 mech_eap_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(mech_eap_la_CXXFLAGS) \
@@ -292,6 +292,9 @@ OBJEXT = @OBJEXT@
 OPENSAML_CXXFLAGS = @OPENSAML_CXXFLAGS@
 OPENSAML_LDFLAGS = @OPENSAML_LDFLAGS@
 OPENSAML_LIBS = @OPENSAML_LIBS@
+OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
+OPENSSL_LDFLAGS = @OPENSSL_LDFLAGS@
+OPENSSL_LIBS = @OPENSSL_LIBS@
 OTOOL = @OTOOL@
 OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
@@ -411,11 +414,11 @@ mech_eap_la_DEPENDENCIES = $(GSSEAP_EXPORTS)
 mech_eap_la_CPPFLAGS = -DBUILD_GSSEAP_LIB -DSYSCONFDIR=\"${sysconfdir}\" -DDATAROOTDIR=\"${datarootdir}\"
 mech_eap_la_LDFLAGS = -avoid-version -module -export-symbols \
 	$(GSSEAP_EXPORTS) -no-undefined @KRB5_LDFLAGS@ \
-	@RADSEC_LDFLAGS@ @TARGET_LDFLAGS@ $(am__append_3) \
-	$(am__append_6)
+	@RADSEC_LDFLAGS@ @TARGET_LDFLAGS@ @OPENSSL_LDFLAGS@ \
+	$(am__append_3) $(am__append_6)
 mech_eap_la_LIBADD = @KRB5_LIBS@ ../libeap/libeap.la @RADSEC_LIBS@ \
 	@OPENSAML_LIBS@ @SHIBRESOLVER_LIBS@ @SHIBSP_LIBS@ \
-	@JANSSON_LIBS@ $(am__append_7)
+	@JANSSON_LIBS@ @OPENSSL_LIBS@ $(am__append_7)
 mech_eap_la_SOURCES = acquire_cred.c acquire_cred_with_password.c \
 	add_cred.c add_cred_with_password.c authorize_localname.c \
 	canonicalize_name.c compare_name.c context_time.c \
@@ -434,11 +437,11 @@ mech_eap_la_SOURCES = acquire_cred.c acquire_cred_with_password.c \
 	store_cred.c unwrap.c unwrap_iov.c util_buffer.c \
 	util_context.c util_cksum.c util_cred.c util_crypt.c \
 	util_krb.c util_lucid.c util_mech.c util_name.c util_oid.c \
-	util_ordering.c util_sm.c util_tld.c util_token.c verify_mic.c \
-	wrap.c wrap_iov.c wrap_iov_length.c wrap_size_limit.c \
-	gssapiP_eap.h util_attr.h util_base64.h util.h util_json.h \
-	util_radius.h util_reauth.h util_saml.h util_shib.h \
-	$(am__append_4) $(am__append_8) $(am__append_9) \
+	util_ordering.c util_radius.cpp util_sm.c util_tld.c \
+	util_token.c verify_mic.c wrap.c wrap_iov.c wrap_iov_length.c \
+	wrap_size_limit.c gssapiP_eap.h util_attr.h util_base64.h \
+	util.h util_json.h util_radius.h util_reauth.h util_saml.h \
+	util_shib.h $(am__append_4) $(am__append_8) $(am__append_9) \
 	$(am__append_10) $(am__append_11)
 BUILT_SOURCES = gsseap_err.c radsec_err.c gsseap_err.h radsec_err.h
 @GSSEAP_ENABLE_REAUTH_TRUE@@HEIMDAL_FALSE@krb5pluginsdir = $(libdir)/krb5/plugins/authdata
@@ -1223,6 +1226,13 @@ radius_ad_la-util_adshim.lo: util_adshim.c
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
 
+mech_eap_la-util_radius.lo: util_radius.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mech_eap_la_CPPFLAGS) $(CPPFLAGS) $(mech_eap_la_CXXFLAGS) $(CXXFLAGS) -MT mech_eap_la-util_radius.lo -MD -MP -MF $(DEPDIR)/mech_eap_la-util_radius.Tpo -c -o mech_eap_la-util_radius.lo `test -f 'util_radius.cpp' || echo '$(srcdir)/'`util_radius.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/mech_eap_la-util_radius.Tpo $(DEPDIR)/mech_eap_la-util_radius.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='util_radius.cpp' object='mech_eap_la-util_radius.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mech_eap_la_CPPFLAGS) $(CPPFLAGS) $(mech_eap_la_CXXFLAGS) $(CXXFLAGS) -c -o mech_eap_la-util_radius.lo `test -f 'util_radius.cpp' || echo '$(srcdir)/'`util_radius.cpp
+
 mech_eap_la-util_attr.lo: util_attr.cpp
 @am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mech_eap_la_CPPFLAGS) $(CPPFLAGS) $(mech_eap_la_CXXFLAGS) $(CXXFLAGS) -MT mech_eap_la-util_attr.lo -MD -MP -MF $(DEPDIR)/mech_eap_la-util_attr.Tpo -c -o mech_eap_la-util_attr.lo `test -f 'util_attr.cpp' || echo '$(srcdir)/'`util_attr.cpp
 @am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/mech_eap_la-util_attr.Tpo $(DEPDIR)/mech_eap_la-util_attr.Plo
@@ -1236,13 +1246,6 @@ mech_eap_la-util_json.lo: util_json.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='util_json.cpp' object='mech_eap_la-util_json.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mech_eap_la_CPPFLAGS) $(CPPFLAGS) $(mech_eap_la_CXXFLAGS) $(CXXFLAGS) -c -o mech_eap_la-util_json.lo `test -f 'util_json.cpp' || echo '$(srcdir)/'`util_json.cpp
-
-mech_eap_la-util_radius.lo: util_radius.cpp
-@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mech_eap_la_CPPFLAGS) $(CPPFLAGS) $(mech_eap_la_CXXFLAGS) $(CXXFLAGS) -MT mech_eap_la-util_radius.lo -MD -MP -MF $(DEPDIR)/mech_eap_la-util_radius.Tpo -c -o mech_eap_la-util_radius.lo `test -f 'util_radius.cpp' || echo '$(srcdir)/'`util_radius.cpp
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/mech_eap_la-util_radius.Tpo $(DEPDIR)/mech_eap_la-util_radius.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='util_radius.cpp' object='mech_eap_la-util_radius.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mech_eap_la_CPPFLAGS) $(CPPFLAGS) $(mech_eap_la_CXXFLAGS) $(CXXFLAGS) -c -o mech_eap_la-util_radius.lo `test -f 'util_radius.cpp' || echo '$(srcdir)/'`util_radius.cpp
 
 mech_eap_la-util_saml.lo: util_saml.cpp
 @am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mech_eap_la_CPPFLAGS) $(CPPFLAGS) $(mech_eap_la_CXXFLAGS) $(CXXFLAGS) -MT mech_eap_la-util_saml.lo -MD -MP -MF $(DEPDIR)/mech_eap_la-util_saml.Tpo -c -o mech_eap_la-util_saml.lo `test -f 'util_saml.cpp' || echo '$(srcdir)/'`util_saml.cpp

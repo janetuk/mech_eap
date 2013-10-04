@@ -59,22 +59,13 @@ am__objects_2 = eap_tls.lo eap_peap.lo eap_ttls.lo eap_md5.lo \
 	eap_psk.lo eap_pax.lo eap_sake.lo eap_gpsk.lo eap.lo \
 	eap_common.lo eap_methods.lo eap_tls_common.lo
 am__objects_3 = base64.lo common.lo ip_addr.lo radiotap.lo trace.lo \
-	uuid.lo wpa_debug.lo wpabuf.lo os_unix.lo
+	uuid.lo wpa_debug.lo wpabuf.lo os_unix.lo radius_utils.lo
 am__objects_4 = aes-cbc.lo aes-ctr.lo aes-eax.lo aes-encblock.lo \
-	aes-internal.lo aes-internal-dec.lo aes-internal-enc.lo \
-	aes-omac1.lo aes-unwrap.lo aes-wrap.lo des-internal.lo \
-	dh_group5.lo dh_groups.lo md4-internal.lo md5.lo \
-	md5-internal.lo md5-non-fips.lo milenage.lo ms_funcs.lo rc4.lo \
-	sha1.lo sha1-internal.lo sha1-pbkdf2.lo sha1-tlsprf.lo \
-	sha1-tprf.lo sha256.lo sha256-internal.lo crypto_internal.lo \
-	crypto_internal-cipher.lo crypto_internal-modexp.lo \
-	crypto_internal-rsa.lo tls_internal.lo fips_prf_internal.lo
-am__objects_5 = asn1.lo bignum.lo pkcs1.lo pkcs5.lo pkcs8.lo rsa.lo \
-	tlsv1_client.lo tlsv1_client_read.lo tlsv1_client_write.lo \
-	tlsv1_common.lo tlsv1_cred.lo tlsv1_record.lo tlsv1_server.lo \
-	tlsv1_server_read.lo tlsv1_server_write.lo x509v3.lo
+	aes-omac1.lo aes-unwrap.lo aes-wrap.lo md5.lo md5-non-fips.lo \
+	milenage.lo ms_funcs.lo sha1.lo sha1-pbkdf2.lo sha1-tlsprf.lo \
+	sha1-tprf.lo sha256.lo crypto_openssl.lo tls_openssl.lo
 am_libeap_la_OBJECTS = $(am__objects_1) $(am__objects_2) \
-	$(am__objects_3) $(am__objects_4) $(am__objects_5)
+	$(am__objects_3) $(am__objects_4)
 libeap_la_OBJECTS = $(am_libeap_la_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/build-aux/depcomp
@@ -105,16 +96,7 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
-CFLAGS = @CFLAGS@ -DEAP_TLS -DEAP_PEAP -DEAP_TTLS -DEAP_MD5 \
-	-DEAP_MSCHAPv2 -DEAP_GTC -DEAP_OTP -DEAP_LEAP -DEAP_PSK \
-	-DEAP_PAX -DEAP_SAKE -DEAP_GPSK -DEAP_GPSK_SHA256 \
-	-DEAP_SERVER_IDENTITY -DEAP_SERVER_TLS -DEAP_SERVER_PEAP \
-	-DEAP_SERVER_TTLS -DEAP_SERVER_MD5 -DEAP_SERVER_MSCHAPV2 \
-	-DEAP_SERVER_GTC -DEAP_SERVER_PSK -DEAP_SERVER_PAX \
-	-DEAP_SERVER_SAKE -DEAP_SERVER_GPSK -DEAP_SERVER_GPSK_SHA256 \
-	-DIEEE8021X_EAPOL -DCONFIG_IPV6 -DCONFIG_INTERNAL_LIBTOMMATH \
-	-DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT \
-	-DCONFIG_TLS_INTERNAL_SERVER
+CFLAGS = @CFLAGS@
 COMPILE_ET = @COMPILE_ET@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
@@ -167,6 +149,9 @@ OBJEXT = @OBJEXT@
 OPENSAML_CXXFLAGS = @OPENSAML_CXXFLAGS@
 OPENSAML_LDFLAGS = @OPENSAML_LDFLAGS@
 OPENSAML_LIBS = @OPENSAML_LIBS@
+OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
+OPENSSL_LDFLAGS = @OPENSSL_LDFLAGS@
+OPENSSL_LIBS = @OPENSSL_LIBS@
 OTOOL = @OTOOL@
 OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
@@ -248,7 +233,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign
-AM_CPPFLAGS = -I$(srcdir)/src -I$(srcdir)/eap_example -I$(srcdir)/src/utils 
+AM_CPPFLAGS = -I$(srcdir)/src -I$(srcdir)/eap_example -I$(srcdir)/src/utils @OPENSSL_CFLAGS@
 noinst_HEADERS = \
 	src/common/defs.h \
 	src/common/eapol_common.h \
@@ -290,6 +275,15 @@ SOURCES_peer = src/eap_peer/eap_tls.c src/eap_peer/eap_peap.c \
 	src/eap_peer/eap_i.h src/eap_peer/eap_methods.h \
 	src/eap_peer/eap_tls_common.h src/eap_peer/ikev2.h \
 	src/eap_peer/mschapv2.h src/eap_peer/tncc.h
+AM_CFLAGS = -DEAP_TLS -DEAP_PEAP -DEAP_TTLS -DEAP_MD5 -DEAP_MSCHAPv2 \
+	-DEAP_GTC -DEAP_OTP -DEAP_LEAP -DEAP_PSK -DEAP_PAX -DEAP_SAKE \
+	-DEAP_GPSK -DEAP_GPSK_SHA256 -DEAP_SERVER_IDENTITY \
+	-DEAP_SERVER_TLS -DEAP_SERVER_PEAP -DEAP_SERVER_TTLS \
+	-DEAP_SERVER_MD5 -DEAP_SERVER_MSCHAPV2 -DEAP_SERVER_GTC \
+	-DEAP_SERVER_PSK -DEAP_SERVER_PAX -DEAP_SERVER_SAKE \
+	-DEAP_SERVER_GPSK -DEAP_SERVER_GPSK_SHA256 -DIEEE8021X_EAPOL \
+	-DCONFIG_IPV6 -DCONFIG_INTERNAL_LIBTOMMATH \
+	-DCONFIG_INTERNAL_SHA1 -DEAP_TLS_OPENSSL -DPKCS12_FUNCS
 UTILS_SRCS = src/utils/base64.c \
 	src/utils/common.c \
 	src/utils/ip_addr.c \
@@ -299,6 +293,8 @@ UTILS_SRCS = src/utils/base64.c \
 	src/utils/wpa_debug.c \
 	src/utils/wpabuf.c \
 	src/utils/os_unix.c \
+	src/utils/radius_utils.c \
+src/utils/radius_utils.h \
 	src/utils/base64.h \
 	src/utils/build_config.h \
 	src/utils/common.h \
@@ -321,50 +317,30 @@ CRYPTO_SRCS = \
     src/crypto/aes-ctr.c \
     src/crypto/aes-eax.c \
     src/crypto/aes-encblock.c \
-    src/crypto/aes-internal.c \
-    src/crypto/aes-internal-dec.c \
-    src/crypto/aes-internal-enc.c \
     src/crypto/aes-omac1.c \
     src/crypto/aes-unwrap.c \
     src/crypto/aes-wrap.c \
-    src/crypto/des-internal.c \
-    src/crypto/dh_group5.c \
-    src/crypto/dh_groups.c \
-    src/crypto/md4-internal.c \
     src/crypto/md5.c \
-    src/crypto/md5-internal.c \
     src/crypto/md5-non-fips.c \
     src/crypto/milenage.c \
     src/crypto/ms_funcs.c \
-    src/crypto/rc4.c \
     src/crypto/sha1.c \
-    src/crypto/sha1-internal.c \
     src/crypto/sha1-pbkdf2.c \
     src/crypto/sha1-tlsprf.c \
     src/crypto/sha1-tprf.c \
     src/crypto/sha256.c \
-    src/crypto/sha256-internal.c \
-    src/crypto/crypto_internal.c \
-    src/crypto/crypto_internal-cipher.c \
-    src/crypto/crypto_internal-modexp.c \
-    src/crypto/crypto_internal-rsa.c \
-    src/crypto/tls_internal.c \
-    src/crypto/fips_prf_internal.c \
-	src/crypto/aes.h \
-	src/crypto/aes_i.h \
-	src/crypto/aes_wrap.h \
-	src/crypto/crypto.h \
-	src/crypto/des_i.h \
-	src/crypto/dh_group5.h \
-	src/crypto/dh_groups.h \
-	src/crypto/md5.h \
-	src/crypto/md5_i.h \
-	src/crypto/milenage.h \
-	src/crypto/ms_funcs.h \
-	src/crypto/sha1.h \
-	src/crypto/sha1_i.h \
-	src/crypto/sha256.h \
-	src/crypto/tls.h
+    src/crypto/crypto_openssl.c \
+    src/crypto/tls_openssl.c \
+    src/crypto/aes.h \
+    src/crypto/aes_i.h \
+    src/crypto/aes_wrap.h \
+    src/crypto/crypto.h \
+    src/crypto/md5.h \
+    src/crypto/milenage.h \
+    src/crypto/ms_funcs.h \
+    src/crypto/sha1.h \
+    src/crypto/sha256.h \
+    src/crypto/tls.h
 
 TLS_SRCS = \
     src/tls/asn1.c \
@@ -383,22 +359,22 @@ TLS_SRCS = \
     src/tls/tlsv1_server_read.c \
     src/tls/tlsv1_server_write.c \
     src/tls/x509v3.c \
-	src/tls/asn1.h \
-	src/tls/bignum.h \
-	src/tls/pkcs1.h \
-	src/tls/pkcs5.h \
-	src/tls/pkcs8.h \
-	src/tls/rsa.h \
-	src/tls/tlsv1_client.h \
-	src/tls/tlsv1_client_i.h \
-	src/tls/tlsv1_common.h \
-	src/tls/tlsv1_cred.h \
-	src/tls/tlsv1_record.h \
-	src/tls/tlsv1_server.h \
-	src/tls/tlsv1_server_i.h \
-	src/tls/x509v3.h 
+    src/tls/asn1.h \
+    src/tls/bignum.h \
+    src/tls/pkcs1.h \
+    src/tls/pkcs5.h \
+    src/tls/pkcs8.h \
+    src/tls/rsa.h \
+    src/tls/tlsv1_client.h \
+    src/tls/tlsv1_client_i.h \
+    src/tls/tlsv1_common.h \
+    src/tls/tlsv1_cred.h \
+    src/tls/tlsv1_record.h \
+    src/tls/tlsv1_server.h \
+    src/tls/tlsv1_server_i.h \
+    src/tls/x509v3.h 
 
-libeap_la_SOURCES = $(SOURCES_BOTH) $(SOURCES_peer) $(UTILS_SRCS) $(CRYPTO_SRCS) $(TLS_SRCS)
+libeap_la_SOURCES = $(SOURCES_BOTH) $(SOURCES_peer) $(UTILS_SRCS) $(CRYPTO_SRCS)
 noinst_LTLIBRARIES = libeap.la
 all: all-am
 
@@ -456,24 +432,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aes-ctr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aes-eax.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aes-encblock.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aes-internal-dec.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aes-internal-enc.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aes-internal.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aes-omac1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aes-unwrap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aes-wrap.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asn1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/base64.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bignum.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/chap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crypto_internal-cipher.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crypto_internal-modexp.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crypto_internal-rsa.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crypto_internal.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/des-internal.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dh_group5.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dh_groups.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crypto_openssl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eap_common.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eap_gpsk.Plo@am__quote@
@@ -495,44 +460,25 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eap_tls.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eap_tls_common.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eap_ttls.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fips_prf_internal.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ip_addr.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/md4-internal.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/md5-internal.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/md5-non-fips.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/md5.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/milenage.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ms_funcs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mschapv2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/os_unix.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pkcs1.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pkcs5.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pkcs8.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radiotap.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rc4.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rsa.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sha1-internal.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radius_utils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sha1-pbkdf2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sha1-tlsprf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sha1-tprf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sha1.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sha256-internal.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sha256.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tls_internal.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tlsv1_client.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tlsv1_client_read.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tlsv1_client_write.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tlsv1_common.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tlsv1_cred.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tlsv1_record.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tlsv1_server.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tlsv1_server_read.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tlsv1_server_write.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tls_openssl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trace.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/uuid.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wpa_debug.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wpabuf.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/x509v3.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -779,6 +725,13 @@ os_unix.lo: src/utils/os_unix.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o os_unix.lo `test -f 'src/utils/os_unix.c' || echo '$(srcdir)/'`src/utils/os_unix.c
 
+radius_utils.lo: src/utils/radius_utils.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT radius_utils.lo -MD -MP -MF $(DEPDIR)/radius_utils.Tpo -c -o radius_utils.lo `test -f 'src/utils/radius_utils.c' || echo '$(srcdir)/'`src/utils/radius_utils.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/radius_utils.Tpo $(DEPDIR)/radius_utils.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/utils/radius_utils.c' object='radius_utils.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o radius_utils.lo `test -f 'src/utils/radius_utils.c' || echo '$(srcdir)/'`src/utils/radius_utils.c
+
 aes-cbc.lo: src/crypto/aes-cbc.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT aes-cbc.lo -MD -MP -MF $(DEPDIR)/aes-cbc.Tpo -c -o aes-cbc.lo `test -f 'src/crypto/aes-cbc.c' || echo '$(srcdir)/'`src/crypto/aes-cbc.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/aes-cbc.Tpo $(DEPDIR)/aes-cbc.Plo
@@ -807,27 +760,6 @@ aes-encblock.lo: src/crypto/aes-encblock.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o aes-encblock.lo `test -f 'src/crypto/aes-encblock.c' || echo '$(srcdir)/'`src/crypto/aes-encblock.c
 
-aes-internal.lo: src/crypto/aes-internal.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT aes-internal.lo -MD -MP -MF $(DEPDIR)/aes-internal.Tpo -c -o aes-internal.lo `test -f 'src/crypto/aes-internal.c' || echo '$(srcdir)/'`src/crypto/aes-internal.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/aes-internal.Tpo $(DEPDIR)/aes-internal.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/aes-internal.c' object='aes-internal.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o aes-internal.lo `test -f 'src/crypto/aes-internal.c' || echo '$(srcdir)/'`src/crypto/aes-internal.c
-
-aes-internal-dec.lo: src/crypto/aes-internal-dec.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT aes-internal-dec.lo -MD -MP -MF $(DEPDIR)/aes-internal-dec.Tpo -c -o aes-internal-dec.lo `test -f 'src/crypto/aes-internal-dec.c' || echo '$(srcdir)/'`src/crypto/aes-internal-dec.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/aes-internal-dec.Tpo $(DEPDIR)/aes-internal-dec.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/aes-internal-dec.c' object='aes-internal-dec.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o aes-internal-dec.lo `test -f 'src/crypto/aes-internal-dec.c' || echo '$(srcdir)/'`src/crypto/aes-internal-dec.c
-
-aes-internal-enc.lo: src/crypto/aes-internal-enc.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT aes-internal-enc.lo -MD -MP -MF $(DEPDIR)/aes-internal-enc.Tpo -c -o aes-internal-enc.lo `test -f 'src/crypto/aes-internal-enc.c' || echo '$(srcdir)/'`src/crypto/aes-internal-enc.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/aes-internal-enc.Tpo $(DEPDIR)/aes-internal-enc.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/aes-internal-enc.c' object='aes-internal-enc.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o aes-internal-enc.lo `test -f 'src/crypto/aes-internal-enc.c' || echo '$(srcdir)/'`src/crypto/aes-internal-enc.c
-
 aes-omac1.lo: src/crypto/aes-omac1.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT aes-omac1.lo -MD -MP -MF $(DEPDIR)/aes-omac1.Tpo -c -o aes-omac1.lo `test -f 'src/crypto/aes-omac1.c' || echo '$(srcdir)/'`src/crypto/aes-omac1.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/aes-omac1.Tpo $(DEPDIR)/aes-omac1.Plo
@@ -849,47 +781,12 @@ aes-wrap.lo: src/crypto/aes-wrap.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o aes-wrap.lo `test -f 'src/crypto/aes-wrap.c' || echo '$(srcdir)/'`src/crypto/aes-wrap.c
 
-des-internal.lo: src/crypto/des-internal.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT des-internal.lo -MD -MP -MF $(DEPDIR)/des-internal.Tpo -c -o des-internal.lo `test -f 'src/crypto/des-internal.c' || echo '$(srcdir)/'`src/crypto/des-internal.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/des-internal.Tpo $(DEPDIR)/des-internal.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/des-internal.c' object='des-internal.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o des-internal.lo `test -f 'src/crypto/des-internal.c' || echo '$(srcdir)/'`src/crypto/des-internal.c
-
-dh_group5.lo: src/crypto/dh_group5.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dh_group5.lo -MD -MP -MF $(DEPDIR)/dh_group5.Tpo -c -o dh_group5.lo `test -f 'src/crypto/dh_group5.c' || echo '$(srcdir)/'`src/crypto/dh_group5.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/dh_group5.Tpo $(DEPDIR)/dh_group5.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/dh_group5.c' object='dh_group5.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dh_group5.lo `test -f 'src/crypto/dh_group5.c' || echo '$(srcdir)/'`src/crypto/dh_group5.c
-
-dh_groups.lo: src/crypto/dh_groups.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dh_groups.lo -MD -MP -MF $(DEPDIR)/dh_groups.Tpo -c -o dh_groups.lo `test -f 'src/crypto/dh_groups.c' || echo '$(srcdir)/'`src/crypto/dh_groups.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/dh_groups.Tpo $(DEPDIR)/dh_groups.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/dh_groups.c' object='dh_groups.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dh_groups.lo `test -f 'src/crypto/dh_groups.c' || echo '$(srcdir)/'`src/crypto/dh_groups.c
-
-md4-internal.lo: src/crypto/md4-internal.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT md4-internal.lo -MD -MP -MF $(DEPDIR)/md4-internal.Tpo -c -o md4-internal.lo `test -f 'src/crypto/md4-internal.c' || echo '$(srcdir)/'`src/crypto/md4-internal.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/md4-internal.Tpo $(DEPDIR)/md4-internal.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/md4-internal.c' object='md4-internal.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o md4-internal.lo `test -f 'src/crypto/md4-internal.c' || echo '$(srcdir)/'`src/crypto/md4-internal.c
-
 md5.lo: src/crypto/md5.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT md5.lo -MD -MP -MF $(DEPDIR)/md5.Tpo -c -o md5.lo `test -f 'src/crypto/md5.c' || echo '$(srcdir)/'`src/crypto/md5.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/md5.Tpo $(DEPDIR)/md5.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/md5.c' object='md5.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o md5.lo `test -f 'src/crypto/md5.c' || echo '$(srcdir)/'`src/crypto/md5.c
-
-md5-internal.lo: src/crypto/md5-internal.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT md5-internal.lo -MD -MP -MF $(DEPDIR)/md5-internal.Tpo -c -o md5-internal.lo `test -f 'src/crypto/md5-internal.c' || echo '$(srcdir)/'`src/crypto/md5-internal.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/md5-internal.Tpo $(DEPDIR)/md5-internal.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/md5-internal.c' object='md5-internal.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o md5-internal.lo `test -f 'src/crypto/md5-internal.c' || echo '$(srcdir)/'`src/crypto/md5-internal.c
 
 md5-non-fips.lo: src/crypto/md5-non-fips.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT md5-non-fips.lo -MD -MP -MF $(DEPDIR)/md5-non-fips.Tpo -c -o md5-non-fips.lo `test -f 'src/crypto/md5-non-fips.c' || echo '$(srcdir)/'`src/crypto/md5-non-fips.c
@@ -912,26 +809,12 @@ ms_funcs.lo: src/crypto/ms_funcs.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ms_funcs.lo `test -f 'src/crypto/ms_funcs.c' || echo '$(srcdir)/'`src/crypto/ms_funcs.c
 
-rc4.lo: src/crypto/rc4.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rc4.lo -MD -MP -MF $(DEPDIR)/rc4.Tpo -c -o rc4.lo `test -f 'src/crypto/rc4.c' || echo '$(srcdir)/'`src/crypto/rc4.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/rc4.Tpo $(DEPDIR)/rc4.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/rc4.c' object='rc4.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rc4.lo `test -f 'src/crypto/rc4.c' || echo '$(srcdir)/'`src/crypto/rc4.c
-
 sha1.lo: src/crypto/sha1.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sha1.lo -MD -MP -MF $(DEPDIR)/sha1.Tpo -c -o sha1.lo `test -f 'src/crypto/sha1.c' || echo '$(srcdir)/'`src/crypto/sha1.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/sha1.Tpo $(DEPDIR)/sha1.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/sha1.c' object='sha1.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sha1.lo `test -f 'src/crypto/sha1.c' || echo '$(srcdir)/'`src/crypto/sha1.c
-
-sha1-internal.lo: src/crypto/sha1-internal.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sha1-internal.lo -MD -MP -MF $(DEPDIR)/sha1-internal.Tpo -c -o sha1-internal.lo `test -f 'src/crypto/sha1-internal.c' || echo '$(srcdir)/'`src/crypto/sha1-internal.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/sha1-internal.Tpo $(DEPDIR)/sha1-internal.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/sha1-internal.c' object='sha1-internal.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sha1-internal.lo `test -f 'src/crypto/sha1-internal.c' || echo '$(srcdir)/'`src/crypto/sha1-internal.c
 
 sha1-pbkdf2.lo: src/crypto/sha1-pbkdf2.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sha1-pbkdf2.lo -MD -MP -MF $(DEPDIR)/sha1-pbkdf2.Tpo -c -o sha1-pbkdf2.lo `test -f 'src/crypto/sha1-pbkdf2.c' || echo '$(srcdir)/'`src/crypto/sha1-pbkdf2.c
@@ -961,166 +844,19 @@ sha256.lo: src/crypto/sha256.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sha256.lo `test -f 'src/crypto/sha256.c' || echo '$(srcdir)/'`src/crypto/sha256.c
 
-sha256-internal.lo: src/crypto/sha256-internal.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sha256-internal.lo -MD -MP -MF $(DEPDIR)/sha256-internal.Tpo -c -o sha256-internal.lo `test -f 'src/crypto/sha256-internal.c' || echo '$(srcdir)/'`src/crypto/sha256-internal.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/sha256-internal.Tpo $(DEPDIR)/sha256-internal.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/sha256-internal.c' object='sha256-internal.lo' libtool=yes @AMDEPBACKSLASH@
+crypto_openssl.lo: src/crypto/crypto_openssl.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT crypto_openssl.lo -MD -MP -MF $(DEPDIR)/crypto_openssl.Tpo -c -o crypto_openssl.lo `test -f 'src/crypto/crypto_openssl.c' || echo '$(srcdir)/'`src/crypto/crypto_openssl.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/crypto_openssl.Tpo $(DEPDIR)/crypto_openssl.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/crypto_openssl.c' object='crypto_openssl.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sha256-internal.lo `test -f 'src/crypto/sha256-internal.c' || echo '$(srcdir)/'`src/crypto/sha256-internal.c
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o crypto_openssl.lo `test -f 'src/crypto/crypto_openssl.c' || echo '$(srcdir)/'`src/crypto/crypto_openssl.c
 
-crypto_internal.lo: src/crypto/crypto_internal.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT crypto_internal.lo -MD -MP -MF $(DEPDIR)/crypto_internal.Tpo -c -o crypto_internal.lo `test -f 'src/crypto/crypto_internal.c' || echo '$(srcdir)/'`src/crypto/crypto_internal.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/crypto_internal.Tpo $(DEPDIR)/crypto_internal.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/crypto_internal.c' object='crypto_internal.lo' libtool=yes @AMDEPBACKSLASH@
+tls_openssl.lo: src/crypto/tls_openssl.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tls_openssl.lo -MD -MP -MF $(DEPDIR)/tls_openssl.Tpo -c -o tls_openssl.lo `test -f 'src/crypto/tls_openssl.c' || echo '$(srcdir)/'`src/crypto/tls_openssl.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tls_openssl.Tpo $(DEPDIR)/tls_openssl.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/tls_openssl.c' object='tls_openssl.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o crypto_internal.lo `test -f 'src/crypto/crypto_internal.c' || echo '$(srcdir)/'`src/crypto/crypto_internal.c
-
-crypto_internal-cipher.lo: src/crypto/crypto_internal-cipher.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT crypto_internal-cipher.lo -MD -MP -MF $(DEPDIR)/crypto_internal-cipher.Tpo -c -o crypto_internal-cipher.lo `test -f 'src/crypto/crypto_internal-cipher.c' || echo '$(srcdir)/'`src/crypto/crypto_internal-cipher.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/crypto_internal-cipher.Tpo $(DEPDIR)/crypto_internal-cipher.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/crypto_internal-cipher.c' object='crypto_internal-cipher.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o crypto_internal-cipher.lo `test -f 'src/crypto/crypto_internal-cipher.c' || echo '$(srcdir)/'`src/crypto/crypto_internal-cipher.c
-
-crypto_internal-modexp.lo: src/crypto/crypto_internal-modexp.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT crypto_internal-modexp.lo -MD -MP -MF $(DEPDIR)/crypto_internal-modexp.Tpo -c -o crypto_internal-modexp.lo `test -f 'src/crypto/crypto_internal-modexp.c' || echo '$(srcdir)/'`src/crypto/crypto_internal-modexp.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/crypto_internal-modexp.Tpo $(DEPDIR)/crypto_internal-modexp.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/crypto_internal-modexp.c' object='crypto_internal-modexp.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o crypto_internal-modexp.lo `test -f 'src/crypto/crypto_internal-modexp.c' || echo '$(srcdir)/'`src/crypto/crypto_internal-modexp.c
-
-crypto_internal-rsa.lo: src/crypto/crypto_internal-rsa.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT crypto_internal-rsa.lo -MD -MP -MF $(DEPDIR)/crypto_internal-rsa.Tpo -c -o crypto_internal-rsa.lo `test -f 'src/crypto/crypto_internal-rsa.c' || echo '$(srcdir)/'`src/crypto/crypto_internal-rsa.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/crypto_internal-rsa.Tpo $(DEPDIR)/crypto_internal-rsa.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/crypto_internal-rsa.c' object='crypto_internal-rsa.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o crypto_internal-rsa.lo `test -f 'src/crypto/crypto_internal-rsa.c' || echo '$(srcdir)/'`src/crypto/crypto_internal-rsa.c
-
-tls_internal.lo: src/crypto/tls_internal.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tls_internal.lo -MD -MP -MF $(DEPDIR)/tls_internal.Tpo -c -o tls_internal.lo `test -f 'src/crypto/tls_internal.c' || echo '$(srcdir)/'`src/crypto/tls_internal.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tls_internal.Tpo $(DEPDIR)/tls_internal.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/tls_internal.c' object='tls_internal.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tls_internal.lo `test -f 'src/crypto/tls_internal.c' || echo '$(srcdir)/'`src/crypto/tls_internal.c
-
-fips_prf_internal.lo: src/crypto/fips_prf_internal.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT fips_prf_internal.lo -MD -MP -MF $(DEPDIR)/fips_prf_internal.Tpo -c -o fips_prf_internal.lo `test -f 'src/crypto/fips_prf_internal.c' || echo '$(srcdir)/'`src/crypto/fips_prf_internal.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/fips_prf_internal.Tpo $(DEPDIR)/fips_prf_internal.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/crypto/fips_prf_internal.c' object='fips_prf_internal.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o fips_prf_internal.lo `test -f 'src/crypto/fips_prf_internal.c' || echo '$(srcdir)/'`src/crypto/fips_prf_internal.c
-
-asn1.lo: src/tls/asn1.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT asn1.lo -MD -MP -MF $(DEPDIR)/asn1.Tpo -c -o asn1.lo `test -f 'src/tls/asn1.c' || echo '$(srcdir)/'`src/tls/asn1.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/asn1.Tpo $(DEPDIR)/asn1.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/tls/asn1.c' object='asn1.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o asn1.lo `test -f 'src/tls/asn1.c' || echo '$(srcdir)/'`src/tls/asn1.c
-
-bignum.lo: src/tls/bignum.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bignum.lo -MD -MP -MF $(DEPDIR)/bignum.Tpo -c -o bignum.lo `test -f 'src/tls/bignum.c' || echo '$(srcdir)/'`src/tls/bignum.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/bignum.Tpo $(DEPDIR)/bignum.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/tls/bignum.c' object='bignum.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bignum.lo `test -f 'src/tls/bignum.c' || echo '$(srcdir)/'`src/tls/bignum.c
-
-pkcs1.lo: src/tls/pkcs1.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT pkcs1.lo -MD -MP -MF $(DEPDIR)/pkcs1.Tpo -c -o pkcs1.lo `test -f 'src/tls/pkcs1.c' || echo '$(srcdir)/'`src/tls/pkcs1.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pkcs1.Tpo $(DEPDIR)/pkcs1.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/tls/pkcs1.c' object='pkcs1.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o pkcs1.lo `test -f 'src/tls/pkcs1.c' || echo '$(srcdir)/'`src/tls/pkcs1.c
-
-pkcs5.lo: src/tls/pkcs5.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT pkcs5.lo -MD -MP -MF $(DEPDIR)/pkcs5.Tpo -c -o pkcs5.lo `test -f 'src/tls/pkcs5.c' || echo '$(srcdir)/'`src/tls/pkcs5.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pkcs5.Tpo $(DEPDIR)/pkcs5.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/tls/pkcs5.c' object='pkcs5.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o pkcs5.lo `test -f 'src/tls/pkcs5.c' || echo '$(srcdir)/'`src/tls/pkcs5.c
-
-pkcs8.lo: src/tls/pkcs8.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT pkcs8.lo -MD -MP -MF $(DEPDIR)/pkcs8.Tpo -c -o pkcs8.lo `test -f 'src/tls/pkcs8.c' || echo '$(srcdir)/'`src/tls/pkcs8.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/pkcs8.Tpo $(DEPDIR)/pkcs8.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/tls/pkcs8.c' object='pkcs8.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o pkcs8.lo `test -f 'src/tls/pkcs8.c' || echo '$(srcdir)/'`src/tls/pkcs8.c
-
-rsa.lo: src/tls/rsa.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rsa.lo -MD -MP -MF $(DEPDIR)/rsa.Tpo -c -o rsa.lo `test -f 'src/tls/rsa.c' || echo '$(srcdir)/'`src/tls/rsa.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/rsa.Tpo $(DEPDIR)/rsa.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/tls/rsa.c' object='rsa.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rsa.lo `test -f 'src/tls/rsa.c' || echo '$(srcdir)/'`src/tls/rsa.c
-
-tlsv1_client.lo: src/tls/tlsv1_client.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tlsv1_client.lo -MD -MP -MF $(DEPDIR)/tlsv1_client.Tpo -c -o tlsv1_client.lo `test -f 'src/tls/tlsv1_client.c' || echo '$(srcdir)/'`src/tls/tlsv1_client.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tlsv1_client.Tpo $(DEPDIR)/tlsv1_client.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/tls/tlsv1_client.c' object='tlsv1_client.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tlsv1_client.lo `test -f 'src/tls/tlsv1_client.c' || echo '$(srcdir)/'`src/tls/tlsv1_client.c
-
-tlsv1_client_read.lo: src/tls/tlsv1_client_read.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tlsv1_client_read.lo -MD -MP -MF $(DEPDIR)/tlsv1_client_read.Tpo -c -o tlsv1_client_read.lo `test -f 'src/tls/tlsv1_client_read.c' || echo '$(srcdir)/'`src/tls/tlsv1_client_read.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tlsv1_client_read.Tpo $(DEPDIR)/tlsv1_client_read.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/tls/tlsv1_client_read.c' object='tlsv1_client_read.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tlsv1_client_read.lo `test -f 'src/tls/tlsv1_client_read.c' || echo '$(srcdir)/'`src/tls/tlsv1_client_read.c
-
-tlsv1_client_write.lo: src/tls/tlsv1_client_write.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tlsv1_client_write.lo -MD -MP -MF $(DEPDIR)/tlsv1_client_write.Tpo -c -o tlsv1_client_write.lo `test -f 'src/tls/tlsv1_client_write.c' || echo '$(srcdir)/'`src/tls/tlsv1_client_write.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tlsv1_client_write.Tpo $(DEPDIR)/tlsv1_client_write.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/tls/tlsv1_client_write.c' object='tlsv1_client_write.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tlsv1_client_write.lo `test -f 'src/tls/tlsv1_client_write.c' || echo '$(srcdir)/'`src/tls/tlsv1_client_write.c
-
-tlsv1_common.lo: src/tls/tlsv1_common.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tlsv1_common.lo -MD -MP -MF $(DEPDIR)/tlsv1_common.Tpo -c -o tlsv1_common.lo `test -f 'src/tls/tlsv1_common.c' || echo '$(srcdir)/'`src/tls/tlsv1_common.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tlsv1_common.Tpo $(DEPDIR)/tlsv1_common.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/tls/tlsv1_common.c' object='tlsv1_common.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tlsv1_common.lo `test -f 'src/tls/tlsv1_common.c' || echo '$(srcdir)/'`src/tls/tlsv1_common.c
-
-tlsv1_cred.lo: src/tls/tlsv1_cred.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tlsv1_cred.lo -MD -MP -MF $(DEPDIR)/tlsv1_cred.Tpo -c -o tlsv1_cred.lo `test -f 'src/tls/tlsv1_cred.c' || echo '$(srcdir)/'`src/tls/tlsv1_cred.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tlsv1_cred.Tpo $(DEPDIR)/tlsv1_cred.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/tls/tlsv1_cred.c' object='tlsv1_cred.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tlsv1_cred.lo `test -f 'src/tls/tlsv1_cred.c' || echo '$(srcdir)/'`src/tls/tlsv1_cred.c
-
-tlsv1_record.lo: src/tls/tlsv1_record.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tlsv1_record.lo -MD -MP -MF $(DEPDIR)/tlsv1_record.Tpo -c -o tlsv1_record.lo `test -f 'src/tls/tlsv1_record.c' || echo '$(srcdir)/'`src/tls/tlsv1_record.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tlsv1_record.Tpo $(DEPDIR)/tlsv1_record.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/tls/tlsv1_record.c' object='tlsv1_record.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tlsv1_record.lo `test -f 'src/tls/tlsv1_record.c' || echo '$(srcdir)/'`src/tls/tlsv1_record.c
-
-tlsv1_server.lo: src/tls/tlsv1_server.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tlsv1_server.lo -MD -MP -MF $(DEPDIR)/tlsv1_server.Tpo -c -o tlsv1_server.lo `test -f 'src/tls/tlsv1_server.c' || echo '$(srcdir)/'`src/tls/tlsv1_server.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tlsv1_server.Tpo $(DEPDIR)/tlsv1_server.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/tls/tlsv1_server.c' object='tlsv1_server.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tlsv1_server.lo `test -f 'src/tls/tlsv1_server.c' || echo '$(srcdir)/'`src/tls/tlsv1_server.c
-
-tlsv1_server_read.lo: src/tls/tlsv1_server_read.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tlsv1_server_read.lo -MD -MP -MF $(DEPDIR)/tlsv1_server_read.Tpo -c -o tlsv1_server_read.lo `test -f 'src/tls/tlsv1_server_read.c' || echo '$(srcdir)/'`src/tls/tlsv1_server_read.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tlsv1_server_read.Tpo $(DEPDIR)/tlsv1_server_read.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/tls/tlsv1_server_read.c' object='tlsv1_server_read.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tlsv1_server_read.lo `test -f 'src/tls/tlsv1_server_read.c' || echo '$(srcdir)/'`src/tls/tlsv1_server_read.c
-
-tlsv1_server_write.lo: src/tls/tlsv1_server_write.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tlsv1_server_write.lo -MD -MP -MF $(DEPDIR)/tlsv1_server_write.Tpo -c -o tlsv1_server_write.lo `test -f 'src/tls/tlsv1_server_write.c' || echo '$(srcdir)/'`src/tls/tlsv1_server_write.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tlsv1_server_write.Tpo $(DEPDIR)/tlsv1_server_write.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/tls/tlsv1_server_write.c' object='tlsv1_server_write.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tlsv1_server_write.lo `test -f 'src/tls/tlsv1_server_write.c' || echo '$(srcdir)/'`src/tls/tlsv1_server_write.c
-
-x509v3.lo: src/tls/x509v3.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT x509v3.lo -MD -MP -MF $(DEPDIR)/x509v3.Tpo -c -o x509v3.lo `test -f 'src/tls/x509v3.c' || echo '$(srcdir)/'`src/tls/x509v3.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/x509v3.Tpo $(DEPDIR)/x509v3.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/tls/x509v3.c' object='x509v3.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o x509v3.lo `test -f 'src/tls/x509v3.c' || echo '$(srcdir)/'`src/tls/x509v3.c
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tls_openssl.lo `test -f 'src/crypto/tls_openssl.c' || echo '$(srcdir)/'`src/crypto/tls_openssl.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
