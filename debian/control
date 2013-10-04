@@ -3,8 +3,8 @@ Section: net
 Priority: optional
 Maintainer: Sam Hartman <hartmans@debian.org>
 Build-Depends: debhelper (>= 7.0.50~), autotools-dev, libshibsp-dev (>= 2.5+dfsg~moonshot5), 
-    libradsec-dev (>=0.0.3), libkrb5-dev (>= 1.9.1+dfsg-2), 
-    libshib-resolver-dev, libjansson-dev, moonshot-ui-dev, libssl-dev
+    libradsec-dev (>=0.0.4), libkrb5-dev (>= 1.9.1+dfsg-2), 
+    libshib-resolver-dev, libjansson-dev, moonshot-ui-dev (>= 0.6-2), libssl-dev
 Build-Conflicts: libgss-dev
 Standards-Version: 3.9.2
 Homepage: http://www.project-moonshot.org/
