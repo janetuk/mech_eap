@@ -62,7 +62,9 @@ SOURCES_peer += src/eap_peer/eap_tls_common.c \
 	src/eap_peer/eap_tls_common.h \
 	src/eap_peer/ikev2.h \
 	src/eap_peer/mschapv2.h \
-	src/eap_peer/tncc.h
+	src/eap_peer/tncc.h \
+	src/radius/radius.h
+
 
 AM_CFLAGS = -DEAP_TLS
 AM_CFLAGS += -DEAP_PEAP
@@ -149,6 +151,8 @@ CRYPTO_SRCS = \
     src/crypto/aes_i.h \
     src/crypto/aes_wrap.h \
     src/crypto/crypto.h \
+	src/crypto/dh_group5.h \
+	src/crypto/dh_groups.h \
     src/crypto/md5.h \
     src/crypto/milenage.h \
     src/crypto/ms_funcs.h \
