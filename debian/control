@@ -18,3 +18,13 @@ Description: Moonshot Federated Authentication - authentication mechanism
  Project moonshot provides federated authentication using EAP, RADIUS
  and SAML to applications beyond the web platform. This package
  contains the client and server plugins to perform authentication.
+
+Package: moonshot-gss-eap-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Moonshot Federated Authentication - debugging Symbols
+ Project moonshot provides federated authentication using EAP, RADIUS
+ and SAML to applications beyond the web platform. This package
+ contains debugging symbols.
