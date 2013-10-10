@@ -1,3 +1,10 @@
+moonshot-gss-eap (0.9+20130927-6) unstable; urgency=low
+
+  * Fix segfault (LP: #1237981
+    )
+
+ -- Sam Hartman <hartmans@debian.org>  Thu, 10 Oct 2013 10:21:57 -0400
+
 moonshot-gss-eap (0.9+20130927-5) unstable; urgency=low
 
   * Create moonshot-gss-eap-dbg
