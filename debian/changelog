@@ -1,3 +1,10 @@
+moonshot-gss-eap (0.9+20130927-7) unstable; urgency=low
+
+  * Send flags token with mutual authentication forced
+  
+
+ -- Sam Hartman <hartmans@debian.org>  Tue, 29 Oct 2013 10:41:32 -0400
+
 moonshot-gss-eap (0.9+20130927-6) unstable; urgency=low
 
   * Fix segfault (LP: #1237981
