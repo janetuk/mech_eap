@@ -1,3 +1,9 @@
+moonshot-gss-eap (0.9+20130927-8) unstable; urgency=low
+
+  * Update from upstream to fix segfault on no hostname
+
+ -- Sam Hartman <hartmans@debian.org>  Wed, 13 Nov 2013 22:31:20 -0500
+
 moonshot-gss-eap (0.9+20130927-7) unstable; urgency=low
 
   * Send flags token with mutual authentication forced
