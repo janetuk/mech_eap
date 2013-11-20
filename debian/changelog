@@ -1,3 +1,9 @@
+moonshot-gss-eap (0.9+20130927-9) unstable; urgency=low
+
+  * Enable sha256 in libeap
+
+ -- Sam Hartman <hartmans@debian.org>  Wed, 20 Nov 2013 09:07:55 -0500
+
 moonshot-gss-eap (0.9+20130927-8) unstable; urgency=low
 
   * Update from upstream to fix segfault on no hostname
