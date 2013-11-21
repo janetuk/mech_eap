@@ -1,3 +1,9 @@
+moonshot-gss-eap (0.9+20130927-11) unstable; urgency=low
+
+  * fix assert failure
+
+ -- Sam Hartman <hartmans@debian.org>  Thu, 21 Nov 2013 14:05:09 -0500
+
 moonshot-gss-eap (0.9+20130927-10) unstable; urgency=low
 
   * Permit 1-component service names
