@@ -1,3 +1,9 @@
+moonshot-gss-eap (0.9+20130927-12) unstable; urgency=low
+
+  * Ignore TLS errors before TLS calls are made
+
+ -- Sam Hartman <hartmans@debian.org>  Tue, 26 Nov 2013 08:07:51 -0500
+
 moonshot-gss-eap (0.9+20130927-11) unstable; urgency=low
 
   * fix assert failure
