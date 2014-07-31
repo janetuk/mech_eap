@@ -72,6 +72,8 @@ gssEapAllocCred(OM_uint32 *minor, gss_cred_id_t *pCred)
 static void
 zeroAndReleasePassword(gss_buffer_t password)
 {
+    GSSEAP_ASSERT(password != GSS_C_NO_BUFFER);
+
     if (password->value != NULL) {
         memset(password->value, 0, password->length);
         GSSEAP_FREE(password->value);
@@ -102,6 +104,7 @@ gssEapReleaseCred(OM_uint32 *minor, gss_cred_id_t *pCred)
     gss_release_buffer(&tmpMinor, &cred->radiusConfigFile);
     gss_release_buffer(&tmpMinor, &cred->radiusConfigStanza);
     gss_release_buffer(&tmpMinor, &cred->caCertificate);
+    gss_release_buffer(&tmpMinor, &cred->caCertificateBlob);
     gss_release_buffer(&tmpMinor, &cred->subjectNameConstraint);
     gss_release_buffer(&tmpMinor, &cred->subjectAltNameConstraint);
     gss_release_buffer(&tmpMinor, &cred->clientCertificate);
@@ -680,6 +683,8 @@ gssEapDuplicateCred(OM_uint32 *minor,
         duplicateBufferOrCleanup(&src->radiusConfigStanza, &dst->radiusConfigStanza);
     if (src->caCertificate.value != NULL)
         duplicateBufferOrCleanup(&src->caCertificate, &dst->caCertificate);
+    if (src->caCertificateBlob.value != NULL)
+        duplicateBufferOrCleanup(&src->caCertificateBlob, &dst->caCertificateBlob);
     if (src->subjectNameConstraint.value != NULL)
         duplicateBufferOrCleanup(&src->subjectNameConstraint, &dst->subjectNameConstraint);
     if (src->subjectAltNameConstraint.value != NULL)

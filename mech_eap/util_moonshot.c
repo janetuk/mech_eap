@@ -200,6 +200,7 @@ libMoonshotResolveInitiatorCred(OM_uint32 *minor,
         goto cleanup;
 
     gss_release_buffer(&tmpMinor, &cred->caCertificate);
+    gss_release_buffer(&tmpMinor, &cred->caCertificateBlob);
     gss_release_buffer(&tmpMinor, &cred->subjectNameConstraint);
     gss_release_buffer(&tmpMinor, &cred->subjectAltNameConstraint);
 
@@ -223,7 +224,33 @@ libMoonshotResolveInitiatorCred(OM_uint32 *minor,
 
         cred->caCertificate.length = HASH_PREFIX_LEN + len;
     } else if (!stringEmpty(caCertificate)) {
-        makeStringBufferOrCleanup(caCertificate, &cred->caCertificate);
+        void *blobData;
+        ssize_t blobLength;
+        ssize_t maxLength = ((strlen(caCertificate) + 3) / 4) * 3;
+        if (maxLength < 3) {
+            major = GSS_S_FAILURE;
+            *minor = GSSEAP_BAD_CACERTIFICATE;
+            goto cleanup;
+        }
+        blobData = GSSEAP_MALLOC(maxLength);
+        if (blobData == NULL) {
+            major = GSS_S_FAILURE;
+            *minor = ENOMEM;
+            goto cleanup;
+        }
+
+        blobLength = base64Decode(caCertificate, blobData);
+
+        if ((blobLength <= 0) ||
+            (blobLength < maxLength - 2)) {
+            major = GSS_S_DEFECTIVE_CREDENTIAL;
+            *minor = GSSEAP_BAD_CACERTIFICATE;
+            GSSEAP_FREE(blobData);
+            goto cleanup;
+        }
+        cred->caCertificateBlob.value = blobData;
+        cred->caCertificateBlob.length = blobLength;
+        makeStringBufferOrCleanup("blob://ca-cert", &cred->caCertificate);
     }
 
     if (!stringEmpty(subjectNameConstraint))

@@ -180,6 +180,8 @@ peerGetConfigBlob(void *ctx,
         index = CONFIG_BLOB_CLIENT_CERT;
     else if (strcmp(name, "private-key") == 0)
         index = CONFIG_BLOB_PRIVATE_KEY;
+    else if (strcmp(name, "ca-cert") == 0)
+        index = CONFIG_BLOB_CA_CERT;
     else
         return NULL;
 
@@ -274,6 +276,9 @@ peerInitEapChannelBinding(OM_uint32 *minor, gss_ctx_id_t ctx)
         major = gssEapRadiusAddAttr(minor, &buf,
                                     PW_GSS_ACCEPTOR_REALM_NAME,
                                     0, &nameBuf);
+        if (GSS_ERROR(major))
+            goto cleanup;
+
         chbindReqFlags |= CHBIND_REALM_NAME_FLAG;
     }
 
@@ -412,6 +417,8 @@ peerConfigInit(OM_uint32 *minor, gss_ctx_id_t ctx)
     eapPeerConfig->ca_cert = (unsigned char *)cred->caCertificate.value;
     eapPeerConfig->subject_match = (unsigned char *)cred->subjectNameConstraint.value;
     eapPeerConfig->altsubject_match = (unsigned char *)cred->subjectAltNameConstraint.value;
+    configBlobs[CONFIG_BLOB_CA_CERT].data = cred->caCertificateBlob.value;
+    configBlobs[CONFIG_BLOB_CA_CERT].len = cred->caCertificateBlob.length;
 
     /* eap channel binding */
     if (ctx->initiatorCtx.chbindData != NULL) {
