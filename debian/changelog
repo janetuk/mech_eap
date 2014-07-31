@@ -1,3 +1,10 @@
+moonshot-gss-eap (0.9.1-1) unstable; urgency=medium
+
+  * new upstream release
+    - Includes support for CA certificates.
+
+ -- Sam Hartman <hartmans@debian.org>  Thu, 31 Jul 2014 16:34:02 -0400
+
 moonshot-gss-eap (0.9+20130927-12) unstable; urgency=low
 
   * Ignore TLS errors before TLS calls are made
