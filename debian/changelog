@@ -90,7 +90,7 @@ moonshot-gss-eap (0.1+20130404-1) unstable; urgency=low
   * New upstream release
     - ui displays proper service name, requests correct nai 
 
- -- Kevin Wasserman <kevin@debian>  Thu, 04 Apr 2013 14:29:49 -0400
+ -- Kevin Wasserman <krwasserman@painless-security.com>  Thu, 04 Apr 2013 14:29:49 -0400
 
 moonshot-gss-eap (0.1+20121103-2) unstable; urgency=low
 
@@ -163,6 +163,6 @@ moonshot-gss-eap (0.1+20110427-2) unstable; urgency=low
 
 moonshot-gss-eap (0.1+20110427-1) unstable; urgency=low
 
-  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+  * Initial release
 
  -- Sam Hartman <hartmans@debian.org>  Wed, 27 Apr 2011 08:53:16 -0400
