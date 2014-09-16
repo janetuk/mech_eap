@@ -1,0 +1,39 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+  configure)
+        if [ -z "$2" ]; then
+	    # krb5 prior to 1.12.1+dfsg-2 didn't support loading
+	    # gssapi mechanism definitions from /etc/gss/mech.d.  To
+	    # make matters worse, sysconfdir was set incorrectly so it
+	    # wants the mechanism definition in /usr/etc/gss/mech.
+	    # Starting in 1.12.1+dfsg-2, the krb5 package ships
+	    # /etc/gss/mech.d/README.  There doesn't seem to be a
+	    # great mechanism for a postinst script to actually probe
+	    # the version of another installed package, so we'll treat
+	    # that file as a flag file (as suggested in that README)
+	    # and if that's not present we'll populate
+	    # /usr/etc/gss/mech.  Since moonshot-gss-eap enters Debian
+	    # after krb5 1.12.1+dfsg-2, the moonshot-gss-eap will not
+	    # violate FHS by creating /usr/etc when run with
+	    # consistent dependencies in Debian.  Backported version
+	    # of moonshot-gss-eap may choose to work with older krb5
+	    # rather than being strict with regard to FHS.  That's
+	    # kind of the point.
+	    if [ ! -e /etc/gss/mech.d/README ]; then
+		oid_aes128=1.3.6.1.5.5.15.1.1.17
+		oid_aes256=1.3.6.1.5.5.15.1.1.18
+		mechfile=/usr/etc/gss/mech
+		mkdir -p /usr/etc/gss
+		test -e $mechfile |touch $mechfile
+		fgrep $oid_aes128 $mechfile ||echo eap-aes128 $oid_aes128 mech_eap.so >>$mechfile
+		fgrep $oid_aes256 $mechfile ||echo eap-aes256 $oid_aes256 mech_eap.so >>$mechfile
+		fi
+	    fi
+	;;
+    esac
+
+    #DEBHELPER#
+
+exit 0
