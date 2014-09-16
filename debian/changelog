@@ -1,8 +1,12 @@
-moonshot-gss-eap (0.9.2-1) UNRELEASED; urgency=medium
+moonshot-gss-eap (0.9.2-1) unstable; urgency=medium
 
   * New version
+  * This is ready for Debian unstable, although there are remaining issues
+    before I'd want to see it in a release.  I'll hold a serious bug on
+    the package until these are resolved; see debian/TODO.
+  * Upload to Debian, Closes: #761868
 
- -- Sam Hartman <hartmans@debian.org>  Mon, 15 Sep 2014 17:49:25 -0400
+ -- Sam Hartman <hartmans@debian.org>  Tue, 16 Sep 2014 08:38:39 -0400
 
 moonshot-gss-eap (0.9.1-1) unstable; urgency=medium
 
