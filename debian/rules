@@ -20,3 +20,4 @@ override_dh_strip:
 override_dh_auto_install:
 	install -m644 mech_eap/mech debian/moonshot-gss-eap/etc/gss/mech.d/moonshot-gss-eap
 	dh_auto_install --destdir=debian/moonshot-gss-eap
+	rm debian/moonshot-gss-eap/usr/lib/*/gss/*la
