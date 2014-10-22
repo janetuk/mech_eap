@@ -1,3 +1,13 @@
+moonshot-gss-eap (0.9.2-2) unstable; urgency=medium
+
+  * Incorporate ustream deltas:
+    -  fdc24ae Use C++ destructors not finalizers
+    -a743fc8 Mech_eap: only output debugging when GSSEAP_TRACE is set
+  * moonshot-gss-eap.conf not moonshot-gss-eap in /etc/gss/mech.d so the
+    library picks it up  
+
+ -- Sam Hartman <hartmans@debian.org>  Wed, 22 Oct 2014 15:13:00 -0400
+
 moonshot-gss-eap (0.9.2-1) unstable; urgency=medium
 
   * New version
