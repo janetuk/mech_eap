@@ -1,12 +1,3 @@
-* Give the security team a change to comment on the included code from
-  wpa_supplicant.  There's really no other way; their ABI is not
-  stable enough that it would make sense to build eap shared libraries
-  out of the wpa_supplicant package.  The code is relatively stable,
-  and I think this is the best approach but the security team should
-  be given a heads up.
-
-* Confirm there are not security fixes we need to pull in from wpa_supplicant.
-
 * Not a release blocker for jessie although the security fix
   confirmation above certainly is.  Upgrade to latest wpa_supplicant.
   We have a procedure for doing that (subtree merge of our git master
