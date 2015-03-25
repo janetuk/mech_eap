@@ -1,3 +1,9 @@
+moonshot-gss-eap (0.9.3~2) unstable; urgency=medium
+
+  * Rebuild to  fix error tables
+
+ -- Sam Hartman <hartmans@debian.org>  Wed, 25 Mar 2015 01:18:09 -0400
+
 moonshot-gss-eap (0.9.3~1) UNRELEASED; urgency=medium
 
   * Native for now
