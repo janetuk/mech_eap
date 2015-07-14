@@ -1,10 +1,11 @@
-moonshot-gss-eap (0.9.4~1) UNRELEASED; urgency=medium
+moonshot-gss-eap (0.9.5-1) unstable; urgency=medium
 
   * New upstream version
     - Include base64 decoding fix for newlines and internal spaces
       - Include error table fix
+  * New upstream release including better error messages when GSSEAP_TRACE is set
 
- -- Sam Hartman <hartmans@debian.org>  Wed, 25 Mar 2015 12:43:26 -0400
+ -- Sam Hartman <hartmans@debian.org>  Tue, 14 Jul 2015 16:12:30 -0400
 
 moonshot-gss-eap (0.9.3~1) UNRELEASED; urgency=medium
 
