@@ -27,6 +27,9 @@
 /* Define is OpenSAML is available */
 #undef HAVE_OPENSAML
 
+/* Define to 1 if you have the `secure_getenv' function. */
+#undef HAVE_SECURE_GETENV
+
 /* Define is Shibboleth resolver is available */
 #undef HAVE_SHIBRESOLVER
 

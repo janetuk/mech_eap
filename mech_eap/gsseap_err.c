@@ -25,6 +25,8 @@ static const char * const text[] = {
 	N_("Received unknown response code from RADIUS server"),
 	N_("RADIUS response is missing EAP request"),
 	N_("Generic RADIUS failure"),
+	N_("Proxy had no route to identity provider realm"),
+	N_("IDP Administratively Prohibits Request"),
 	N_("Context is already fully established"),
 	N_("Attempt to use incomplete security context"),
 	N_("Context token is malformed or corrupt"),
@@ -104,7 +106,7 @@ struct et_list {
 };
 extern struct et_list *_et_list;
 
-const struct error_table et_eapg_error_table = { text, 2109382912L, 82 };
+const struct error_table et_eapg_error_table = { text, 2109382912L, 84 };
 
 static struct et_list link = { 0, 0 };
 
