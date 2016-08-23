@@ -1,3 +1,12 @@
+moonshot-gss-eap (0.9.5-2) unstable; urgency=medium
+
+  * Fix FTBFS with gcc-6: auto_ptr is deprecated.  First, -Wdeprecated
+    should not cause an error for package builds.  Second, use unique_ptr,
+    Closes: #831187
+  * Upgrade standards version to 3.9.8 (no changes needed)
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 22 Aug 2016 21:38:12 -0400
+
 moonshot-gss-eap (0.9.5-1) unstable; urgency=medium
 
   * New upstream version
