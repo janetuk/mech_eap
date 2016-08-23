@@ -123,7 +123,7 @@ gss_eap_shib_attr_provider::initWithGssContext(const gss_eap_attr_ctx *manager,
     if (!gss_eap_attr_provider::initWithGssContext(manager, gssCred, gssCtx))
         return false;
 
-    auto_ptr<ShibbolethResolver> resolver(ShibbolethResolver::create());
+    unique_ptr<ShibbolethResolver> resolver(ShibbolethResolver::create());
 
     /*
      * For now, leave ApplicationID defaulted.
