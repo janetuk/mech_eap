@@ -137,13 +137,18 @@ gssEapSaveStatusInfo(OM_uint32 minor, const char *format, ...)
     if (format != NULL) {
         va_start(ap, format);
         n = vasprintf(&s, format, ap);
-        if (n == -1)
+        if (n == -1) {
+            if (s) {
+                free(s);
+            }
             s = NULL;
+        }
         va_end(ap);
-	if (n == -1)
-	  s = NULL;
     }
-
+    /* NOTE: saveStatusInfoNoCopy apparently expects the string to be allocated with
+     * GSSAPI_MALLOC, so perhaps we should copy the string via gssalloc_strdup or 
+     * equivalent?
+     */
     saveStatusInfoNoCopy(minor, s);
 #endif /* WIN32 */
 }
