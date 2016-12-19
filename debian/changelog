@@ -1,3 +1,9 @@
+moonshot-gss-eap (0.9.5-3) unstable; urgency=medium
+
+  * Build depend against openssl 1.0, Closes: #828440
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 19 Dec 2016 09:03:47 -0500
+
 moonshot-gss-eap (0.9.5-2) unstable; urgency=medium
 
   * Fix FTBFS with gcc-6: auto_ptr is deprecated.  First, -Wdeprecated
