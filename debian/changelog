@@ -1,3 +1,11 @@
+moonshot-gss-eap (1.0.0-0) unstable; urgency=medium
+
+  * Fixed https://bugs.launchpad.net/moonshot/+bug/1705714.
+    Refactored a static object whose destructor was responsible for
+    de-initializing the ShibResolver library.
+
+ -- Painless Security <build@painless-security.com>  Mon, 24 Jul 2017 23:16:00 -0500
+
 moonshot-gss-eap (0.9.5-2) unstable; urgency=medium
 
   * Fix FTBFS with gcc-6: auto_ptr is deprecated.  First, -Wdeprecated
