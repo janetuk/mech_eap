@@ -87,6 +87,58 @@ using namespace xercesc;
 #endif
 
 
+
+namespace {
+
+
+    class ShibFinalizer {
+    public:
+
+        static bool isShibInitialized() {return shibInitialized;}
+        static void createSingleton();
+
+    private:
+        ShibFinalizer(): is_extra(false) {
+            if (shibInitialized) {
+                // This should never, ever happen. Initialization is (supposed to be)
+                // funneled through a single thread, so there should be no race
+                // conditions here. And only this class sets this flag, and there's
+                // only a single instance of this class.
+                wpa_printf(MSG_ERROR, "### ShibFinalizer::ShibFinalizer(): Attempt to construct an extraneous instance!");
+                is_extra = true;
+            }
+            else {
+                wpa_printf(MSG_INFO, "### ShibFinalizer::ShibFinalizer(): Constructing");
+                shibInitialized = true;
+            }
+        }
+
+        ~ShibFinalizer() {
+            if (!is_extra) {
+                wpa_printf(MSG_INFO, "### ShibFinalizer::~ShibFinalizer(): Destructing");
+                gss_eap_shib_attr_provider::finalize();
+                shibInitialized = false;
+            }
+            else {
+                wpa_printf(MSG_INFO, "### ShibFinalizer::~ShibFinalizer(): This was an extraneous instance; not destructing anything.");
+            }
+        }
+
+        bool is_extra;
+        static bool shibInitialized;
+    };
+}
+
+
+bool ShibFinalizer::shibInitialized = false;
+
+void ShibFinalizer::createSingleton() {
+    // This object's constructor is invoked on the first call to this method.
+    // At exit, its destructor will terminate Shibboleth.
+    static ShibFinalizer finalizer;
+}
+
+
 gss_eap_shib_attr_provider::gss_eap_shib_attr_provider(void)
 {
     m_initialized = false;
@@ -472,13 +524,22 @@ gss_eap_shib_attr_provider::init(void)
 {
     bool ret = false;
 
+    if (ShibFinalizer::isShibInitialized()) {
+        wpa_printf(MSG_INFO, "### gss_eap_shib_attr_provider::init(): ShibResolver library is already initialized; ignoring.");
+        return true;
+    }
+
+    wpa_printf(MSG_INFO, "### gss_eap_shib_attr_provider::init(): Initializing ShibResolver library");
+
     try {
         ret = ShibbolethResolver::init();
     } catch (exception &e) {
     }
 
-    if (ret)
+    if (ret) {
+        ShibFinalizer::createSingleton();
         gss_eap_attr_ctx::registerProvider(ATTR_TYPE_LOCAL, createAttrContext);
+    }
 
     return ret;
 }
@@ -486,6 +547,7 @@ gss_eap_shib_attr_provider::init(void)
 void
 gss_eap_shib_attr_provider::finalize(void)
 {
+    wpa_printf(MSG_INFO, "### gss_eap_shib_attr_provider::finalize(): calling ShibbolethResolver::term()");
     gss_eap_attr_ctx::unregisterProvider(ATTR_TYPE_LOCAL);
     ShibbolethResolver::term();
 }
@@ -543,6 +605,7 @@ gss_eap_shib_attr_provider::duplicateAttributes(const vector <Attribute *>src)
     return dst;
 }
 
+
 OM_uint32
 gssEapLocalAttrProviderInit(OM_uint32 *minor)
 {
@@ -550,14 +613,6 @@ gssEapLocalAttrProviderInit(OM_uint32 *minor)
         *minor = GSSEAP_SHIB_INIT_FAILURE;
         return GSS_S_FAILURE;
     }
-    return GSS_S_COMPLETE;
-}
 
-OM_uint32
-gssEapLocalAttrProviderFinalize(OM_uint32 *minor)
-{
-    gss_eap_shib_attr_provider::finalize();
-
-    *minor = 0;
     return GSS_S_COMPLETE;
 }
