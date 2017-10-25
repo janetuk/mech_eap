@@ -42,7 +42,7 @@ static OM_uint32
 eapGssSmAcceptGssReauth(OM_uint32 *minor,
                         gss_cred_id_t cred,
                         gss_ctx_id_t ctx,
-                        gss_name_t target,
+                        gss_const_name_t target,
                         gss_OID mech,
                         OM_uint32 reqFlags,
                         OM_uint32 timeReq,
@@ -135,7 +135,7 @@ static OM_uint32
 eapGssSmAcceptAcceptorName(OM_uint32 *minor,
                            gss_cred_id_t cred GSSEAP_UNUSED,
                            gss_ctx_id_t ctx,
-                           gss_name_t target GSSEAP_UNUSED,
+                           gss_const_name_t target GSSEAP_UNUSED,
                            gss_OID mech GSSEAP_UNUSED,
                            OM_uint32 reqFlags GSSEAP_UNUSED,
                            OM_uint32 timeReq GSSEAP_UNUSED,
@@ -164,7 +164,7 @@ static OM_uint32
 eapGssSmAcceptVendorInfo(OM_uint32 *minor,
                          gss_cred_id_t cred GSSEAP_UNUSED,
                          gss_ctx_id_t ctx GSSEAP_UNUSED,
-                         gss_name_t target GSSEAP_UNUSED,
+                         gss_const_name_t target GSSEAP_UNUSED,
                          gss_OID mech GSSEAP_UNUSED,
                          OM_uint32 reqFlags GSSEAP_UNUSED,
                          OM_uint32 timeReq GSSEAP_UNUSED,
@@ -190,7 +190,7 @@ static OM_uint32
 eapGssSmAcceptIdentity(OM_uint32 *minor,
                        gss_cred_id_t cred,
                        gss_ctx_id_t ctx,
-                       gss_name_t target GSSEAP_UNUSED,
+                       gss_const_name_t target GSSEAP_UNUSED,
                        gss_OID mech GSSEAP_UNUSED,
                        OM_uint32 reqFlags GSSEAP_UNUSED,
                        OM_uint32 timeReq GSSEAP_UNUSED,
@@ -443,14 +443,13 @@ createRadiusHandle(OM_uint32 *minor,
  * Choose the correct error for an access reject packet.
  */
 static OM_uint32
-eapGssAcceptHandleReject(
-			 OM_uint32 *minor,
+eapGssAcceptHandleReject(OM_uint32 *minor,
 			 struct rs_packet *response)
 {
     rs_avp **vps;
-    rs_const_avp  *vp = NULL;
+    rs_const_avp *vp = NULL;
     OM_uint32 major;
-    const char * reply_message = NULL;
+    const char *reply_message = NULL;
     size_t reply_length = 0;
 
     rs_packet_avps(response, &vps);
@@ -465,11 +464,11 @@ eapGssAcceptHandleReject(
 				  PW_ERROR_CAUSE, 0, &vp);
     if (!GSS_ERROR(major)) {
 	switch (rs_avp_integer_value(vp)) {
-	    /* Values from http://www.iana.org/assignments/radius-types/radius-types.xhtml#radius-types-18                                                      */
-	case 502: /*request not routable (proxy)*/
+	    /* Values from http://www.iana.org/assignments/radius-types/radius-types.xhtml#radius-types-18 */
+	case 502: /* request not routable (proxy) */
 	    *minor = GSSEAP_RADIUS_UNROUTABLE;
 	    break;
-	case 501: /*administratively prohibited*/
+	case 501: /* administratively prohibited */
 	    *minor = GSSEAP_RADIUS_ADMIN_PROHIBIT;
 	    break;
 
@@ -477,14 +476,18 @@ eapGssAcceptHandleReject(
 	    *minor = GSSEAP_RADIUS_AUTH_FAILURE;
 	    break;
 	}
-    } else *minor = GSSEAP_RADIUS_AUTH_FAILURE;
+    } else
+        *minor = GSSEAP_RADIUS_AUTH_FAILURE;
 
-    if (reply_message)
+    if (reply_message != NULL)
 	gssEapSaveStatusInfo(*minor, "%s: %.*s", error_message(*minor),
 			     reply_length, reply_message);
-    else gssEapSaveStatusInfo( *minor, "%s", error_message(*minor));
+    else
+        gssEapSaveStatusInfo(*minor, "%s", error_message(*minor));
+
     return GSS_S_DEFECTIVE_CREDENTIAL;
 }
+
 /*
  * Process a EAP response from the initiator.
  */
@@ -492,7 +495,7 @@ static OM_uint32
 eapGssSmAcceptAuthenticate(OM_uint32 *minor,
                            gss_cred_id_t cred,
                            gss_ctx_id_t ctx,
-                           gss_name_t target GSSEAP_UNUSED,
+                           gss_const_name_t target GSSEAP_UNUSED,
                            gss_OID mech GSSEAP_UNUSED,
                            OM_uint32 reqFlags GSSEAP_UNUSED,
                            OM_uint32 timeReq GSSEAP_UNUSED,
@@ -637,7 +640,7 @@ static OM_uint32
 eapGssSmAcceptGssFlags(OM_uint32 *minor,
                        gss_cred_id_t cred GSSEAP_UNUSED,
                        gss_ctx_id_t ctx,
-                       gss_name_t target GSSEAP_UNUSED,
+                       gss_const_name_t target GSSEAP_UNUSED,
                        gss_OID mech GSSEAP_UNUSED,
                        OM_uint32 reqFlags GSSEAP_UNUSED,
                        OM_uint32 timeReq GSSEAP_UNUSED,
@@ -671,7 +674,7 @@ static OM_uint32
 eapGssSmAcceptGssChannelBindings(OM_uint32 *minor,
                                  gss_cred_id_t cred GSSEAP_UNUSED,
                                  gss_ctx_id_t ctx,
-                                 gss_name_t target GSSEAP_UNUSED,
+                                 gss_const_name_t target GSSEAP_UNUSED,
                                  gss_OID mech GSSEAP_UNUSED,
                                  OM_uint32 reqFlags GSSEAP_UNUSED,
                                  OM_uint32 timeReq GSSEAP_UNUSED,
@@ -685,6 +688,9 @@ eapGssSmAcceptGssChannelBindings(OM_uint32 *minor,
     krb5_data data;
     krb5_checksum cksum;
     krb5_boolean valid = FALSE;
+#ifdef HAVE_HEIMDAL_VERSION
+    krb5_crypto krbCrypto;
+#endif
 
     if (chanBindings == GSS_C_NO_CHANNEL_BINDINGS ||
         chanBindings->application_data.length == 0)
@@ -698,9 +704,29 @@ eapGssSmAcceptGssChannelBindings(OM_uint32 *minor,
 
     KRB_CHECKSUM_INIT(&cksum, ctx->checksumType, inputToken);
 
+#ifdef HAVE_HEIMDAL_VERSION
+    code = krb5_crypto_init(krbContext, &ctx->rfc3961Key, 0, &krbCrypto);
+    if (code != 0) {
+        *minor = code;
+        return GSS_S_FAILURE;
+    }
+
+    code = krb5_verify_checksum(krbContext, krbCrypto,
+                                KEY_USAGE_GSSEAP_CHBIND_MIC,
+                                data.data, data.length, &cksum);
+    if (code == KRB5KRB_AP_ERR_BAD_INTEGRITY) {
+        code = 0;
+        valid = FALSE;
+    } else if (code == 0) {
+        valid = TRUE;
+    }
+
+    krb5_crypto_destroy(krbContext, krbCrypto);
+#else
     code = krb5_c_verify_checksum(krbContext, &ctx->rfc3961Key,
                                   KEY_USAGE_GSSEAP_CHBIND_MIC,
                                   &data, &cksum, &valid);
+#endif /* HAVE_HEIMDAL_VERSION */
     if (code != 0) {
         *minor = code;
         return GSS_S_FAILURE;
@@ -721,7 +747,7 @@ static OM_uint32
 eapGssSmAcceptInitiatorMIC(OM_uint32 *minor,
                            gss_cred_id_t cred GSSEAP_UNUSED,
                            gss_ctx_id_t ctx,
-                           gss_name_t target GSSEAP_UNUSED,
+                           gss_const_name_t target GSSEAP_UNUSED,
                            gss_OID mech GSSEAP_UNUSED,
                            OM_uint32 reqFlags GSSEAP_UNUSED,
                            OM_uint32 timeReq GSSEAP_UNUSED,
@@ -761,7 +787,7 @@ static OM_uint32
 eapGssSmAcceptReauthCreds(OM_uint32 *minor,
                           gss_cred_id_t cred,
                           gss_ctx_id_t ctx,
-                          gss_name_t target GSSEAP_UNUSED,
+                          gss_const_name_t target GSSEAP_UNUSED,
                           gss_OID mech GSSEAP_UNUSED,
                           OM_uint32 reqFlags GSSEAP_UNUSED,
                           OM_uint32 timeReq GSSEAP_UNUSED,
@@ -790,7 +816,7 @@ static OM_uint32
 eapGssSmAcceptAcceptorMIC(OM_uint32 *minor,
                           gss_cred_id_t cred GSSEAP_UNUSED,
                           gss_ctx_id_t ctx,
-                          gss_name_t target GSSEAP_UNUSED,
+                          gss_const_name_t target GSSEAP_UNUSED,
                           gss_OID mech GSSEAP_UNUSED,
                           OM_uint32 reqFlags GSSEAP_UNUSED,
                           OM_uint32 timeReq GSSEAP_UNUSED,
@@ -1019,7 +1045,7 @@ static OM_uint32
 eapGssSmAcceptGssReauth(OM_uint32 *minor,
                         gss_cred_id_t cred,
                         gss_ctx_id_t ctx,
-                        gss_name_t target GSSEAP_UNUSED,
+                        gss_const_name_t target GSSEAP_UNUSED,
                         gss_OID mech,
                         OM_uint32 reqFlags GSSEAP_UNUSED,
                         OM_uint32 timeReq GSSEAP_UNUSED,
@@ -1077,7 +1103,11 @@ eapGssSmAcceptGssReauth(OM_uint32 *minor,
 OM_uint32 GSSAPI_CALLCONV
 gss_accept_sec_context(OM_uint32 *minor,
                        gss_ctx_id_t *context_handle,
+#ifdef HAVE_HEIMDAL_VERSION
+                       gss_const_cred_id_t cred,
+#else
                        gss_cred_id_t cred,
+#endif
                        gss_buffer_t input_token,
                        gss_channel_bindings_t input_chan_bindings,
                        gss_name_t *src_name,
@@ -1115,7 +1145,7 @@ gss_accept_sec_context(OM_uint32 *minor,
 
     major = gssEapAcceptSecContext(minor,
                                    ctx,
-                                   cred,
+                                   (gss_cred_id_t)cred,
                                    input_token,
                                    input_chan_bindings,
                                    src_name,
@@ -1131,5 +1161,6 @@ gss_accept_sec_context(OM_uint32 *minor,
         gssEapReleaseContext(&tmpMinor, context_handle);
 
     gssEapTraceStatus("gss_accept_sec_context", major, *minor);
+
     return major;
 }

@@ -39,6 +39,10 @@
 #include "radius/radius.h"
 #include "util_radius.h"
 #include "utils/radius_utils.h"
+#include "openssl/err.h"
+#ifdef HAVE_MOONSHOT_GET_IDENTITY
+#include "libmoonshot.h"
+#endif
 
 /* methods allowed for phase1 authentication*/
 static const struct eap_method_type allowed_eap_method_types[] = {
@@ -77,6 +81,9 @@ policyVariableToFlag(enum eapol_bool_var variable)
         break;
     case EAPOL_altReject:
         flag = CTX_FLAG_EAP_ALT_REJECT;
+        break;
+    case EAPOL_eapTriggerStart:
+        flag = CTX_FLAG_EAP_TRIGGER_START;
         break;
     }
 
@@ -198,6 +205,7 @@ peerNotifyPending(void *ctx GSSEAP_UNUSED)
 {
 }
 
+
 static struct eapol_callbacks gssEapPolicyCallbacks = {
     peerGetConfig,
     peerGetBool,
@@ -208,6 +216,8 @@ static struct eapol_callbacks gssEapPolicyCallbacks = {
     peerSetConfigBlob,
     peerGetConfigBlob,
     peerNotifyPending,
+    NULL,  /* eap_param_needed */
+    NULL   /* eap_notify_cert */
 };
 
 
@@ -353,6 +363,91 @@ peerProcessChbindResponse(void *context, int code, int nsid,
     } /* else log failures? */
 }
 
+#ifdef HAVE_MOONSHOT_GET_IDENTITY
+static int cert_to_byte_array(X509 *cert, unsigned char **bytes)
+{
+	unsigned char *buf;
+    unsigned char *p;
+
+	int len = i2d_X509(cert, NULL);
+	if (len <= 0) {
+		return -1;
+    }
+
+	p = buf = GSSEAP_MALLOC(len);
+	if (buf == NULL) {
+		return -1;
+    }
+
+	i2d_X509(cert, &buf);
+
+    *bytes = p;
+    return len;
+}
+
+static int sha256(unsigned char *bytes, int len, unsigned char *hash)
+{
+	EVP_MD_CTX ctx;
+	unsigned int hash_len;
+
+	EVP_MD_CTX_init(&ctx);
+	if (!EVP_DigestInit_ex(&ctx, EVP_sha256(), NULL)) {
+		printf("sha256(init_sec_context.c): EVP_DigestInit_ex failed: %s",
+			   ERR_error_string(ERR_get_error(), NULL));
+		return -1;
+	}
+    if (!EVP_DigestUpdate(&ctx, bytes, len)) {
+		printf("sha256(init_sec_context.c): EVP_DigestUpdate failed: %s",
+				   ERR_error_string(ERR_get_error(), NULL));
+        return -1;
+	}
+	if (!EVP_DigestFinal(&ctx, hash, &hash_len)) {
+		printf("sha256(init_sec_context.c): EVP_DigestFinal failed: %s",
+				   ERR_error_string(ERR_get_error(), NULL));
+		return -1;
+	}
+
+	return hash_len;
+}
+
+static int peerValidateServerCert(int ok_so_far, X509* cert, void *ca_ctx)
+{
+    char                 *realm = NULL;
+    unsigned char        *cert_bytes = NULL;
+    int                   cert_len;
+    unsigned char         hash[32];
+    int                   hash_len;
+    MoonshotError        *error = NULL;
+    struct eap_peer_config *eap_config = (struct eap_peer_config *) ca_ctx;
+    char *identity = strdup((const char *) eap_config->identity);
+
+    // Truncate the identity to just the username; make a separate string for the realm.
+    char* at = strchr(identity, '@');
+    if (at != NULL) {
+        realm = strdup(at + 1);
+        *at = '\0';
+    }
+    
+    cert_len = cert_to_byte_array(cert, &cert_bytes);
+    hash_len = sha256(cert_bytes, cert_len, hash);
+    GSSEAP_FREE(cert_bytes);
+    
+    if (hash_len != 32) {
+        fprintf(stderr, "peerValidateServerCert: Error: hash_len=%d, not 32!\n", hash_len);
+        return FALSE;
+    }
+
+    ok_so_far = moonshot_confirm_ca_certificate(identity, realm, hash, 32, &error);
+    free(identity);
+    if (realm != NULL) {
+        free(realm);
+    }
+    
+    wpa_printf(MSG_INFO, "peerValidateServerCert: Returning %d\n", ok_so_far);
+    return ok_so_far;
+}
+#endif
+
 static OM_uint32
 peerConfigInit(OM_uint32 *minor, gss_ctx_id_t ctx)
 {
@@ -458,8 +553,13 @@ peerConfigInit(OM_uint32 *minor, gss_ctx_id_t ctx)
             eapPeerConfig->client_cert = (unsigned char *)cred->clientCertificate.value;
             eapPeerConfig->private_key = (unsigned char *)cred->privateKey.value;
         }
-        eapPeerConfig->private_key_passwd = (unsigned char *)cred->password.value;
+        eapPeerConfig->private_key_passwd = (char *)cred->password.value;
     }
+
+#ifdef HAVE_MOONSHOT_GET_IDENTITY
+    eapPeerConfig->server_cert_cb = peerValidateServerCert;
+#endif
+    eapPeerConfig->server_cert_ctx = eapPeerConfig;
 
     *minor = 0;
     return GSS_S_COMPLETE;
@@ -543,7 +643,7 @@ initReady(OM_uint32 *minor, gss_ctx_id_t ctx)
 static OM_uint32
 initBegin(OM_uint32 *minor,
           gss_ctx_id_t ctx,
-          gss_name_t target,
+          gss_const_name_t target,
           gss_OID mech,
           OM_uint32 reqFlags GSSEAP_UNUSED,
           OM_uint32 timeReq,
@@ -571,15 +671,15 @@ initBegin(OM_uint32 *minor,
         return major;
 
     if (target != GSS_C_NO_NAME) {
-        GSSEAP_MUTEX_LOCK(&target->mutex);
+        GSSEAP_MUTEX_LOCK(&((gss_name_t)target)->mutex);
 
         major = gssEapDuplicateName(minor, target, &ctx->acceptorName);
         if (GSS_ERROR(major)) {
-            GSSEAP_MUTEX_UNLOCK(&target->mutex);
+            GSSEAP_MUTEX_LOCK(&((gss_name_t)target)->mutex);
             return major;
         }
 
-        GSSEAP_MUTEX_UNLOCK(&target->mutex);
+        GSSEAP_MUTEX_UNLOCK(&((gss_name_t)target)->mutex);
     }
 
     major = gssEapCanonicalizeOid(minor,
@@ -603,7 +703,7 @@ static OM_uint32
 eapGssSmInitError(OM_uint32 *minor,
                   gss_cred_id_t cred GSSEAP_UNUSED,
                   gss_ctx_id_t ctx GSSEAP_UNUSED,
-                  gss_name_t target GSSEAP_UNUSED,
+                  gss_const_name_t target GSSEAP_UNUSED,
                   gss_OID mech GSSEAP_UNUSED,
                   OM_uint32 reqFlags GSSEAP_UNUSED,
                   OM_uint32 timeReq GSSEAP_UNUSED,
@@ -643,7 +743,7 @@ static OM_uint32
 eapGssSmInitGssReauth(OM_uint32 *minor,
                       gss_cred_id_t cred,
                       gss_ctx_id_t ctx,
-                      gss_name_t target,
+                      gss_const_name_t target,
                       gss_OID mech GSSEAP_UNUSED,
                       OM_uint32 reqFlags,
                       OM_uint32 timeReq,
@@ -662,7 +762,7 @@ eapGssSmInitGssReauth(OM_uint32 *minor,
      * context credential does not currently have the reauth creds.
      */
     if (GSSEAP_SM_STATE(ctx) == GSSEAP_STATE_INITIAL) {
-        if (!gssEapCanReauthP(cred, target, timeReq))
+      if (!gssEapCanReauthP(cred, (gss_name_t) target, timeReq))
             return GSS_S_CONTINUE_NEEDED;
 
         ctx->flags |= CTX_FLAG_KRB_REAUTH;
@@ -674,7 +774,7 @@ eapGssSmInitGssReauth(OM_uint32 *minor,
 
     GSSEAP_ASSERT(cred != GSS_C_NO_CREDENTIAL);
 
-    major = gssEapMechToGlueName(minor, target, &mechTarget);
+    major = gssEapMechToGlueName(minor, (gss_name_t) target, &mechTarget);
     if (GSS_ERROR(major))
         goto cleanup;
 
@@ -719,7 +819,7 @@ static OM_uint32
 eapGssSmInitVendorInfo(OM_uint32 *minor,
                        gss_cred_id_t cred GSSEAP_UNUSED,
                        gss_ctx_id_t ctx GSSEAP_UNUSED,
-                       gss_name_t target GSSEAP_UNUSED,
+                       gss_const_name_t target GSSEAP_UNUSED,
                        gss_OID mech GSSEAP_UNUSED,
                        OM_uint32 reqFlags GSSEAP_UNUSED,
                        OM_uint32 timeReq GSSEAP_UNUSED,
@@ -742,7 +842,7 @@ static OM_uint32
 eapGssSmInitAcceptorName(OM_uint32 *minor,
                          gss_cred_id_t cred GSSEAP_UNUSED,
                          gss_ctx_id_t ctx,
-                         gss_name_t target GSSEAP_UNUSED,
+                         gss_const_name_t target GSSEAP_UNUSED,
                          gss_OID mech GSSEAP_UNUSED,
                          OM_uint32 reqFlags GSSEAP_UNUSED,
                          OM_uint32 timeReq GSSEAP_UNUSED,
@@ -825,7 +925,7 @@ static OM_uint32
 eapGssSmInitIdentity(OM_uint32 *minor,
                      gss_cred_id_t cred GSSEAP_UNUSED,
                      gss_ctx_id_t ctx,
-                     gss_name_t target GSSEAP_UNUSED,
+                     gss_const_name_t target GSSEAP_UNUSED,
                      gss_OID mech GSSEAP_UNUSED,
                      OM_uint32 reqFlags GSSEAP_UNUSED,
                      OM_uint32 timeReq GSSEAP_UNUSED,
@@ -835,6 +935,8 @@ eapGssSmInitIdentity(OM_uint32 *minor,
                      OM_uint32 *smFlags)
 {
     struct eap_config eapConfig;
+    memset(&eapConfig, 0, sizeof(eapConfig));
+    eapConfig.cert_in_cb = 1;
 
 #ifdef GSSEAP_ENABLE_REAUTH
     if (GSSEAP_SM_STATE(ctx) == GSSEAP_STATE_REAUTHENTICATE) {
@@ -851,11 +953,9 @@ eapGssSmInitIdentity(OM_uint32 *minor,
     GSSEAP_ASSERT((ctx->flags & CTX_FLAG_KRB_REAUTH) == 0);
     GSSEAP_ASSERT(inputToken == GSS_C_NO_BUFFER);
 
-    memset(&eapConfig, 0, sizeof(eapConfig));
-
     ctx->initiatorCtx.eap = eap_peer_sm_init(ctx,
                                              &gssEapPolicyCallbacks,
-                                             ctx,
+                                             NULL, /* ctx?? */
                                              &eapConfig);
     if (ctx->initiatorCtx.eap == NULL) {
         *minor = GSSEAP_PEER_SM_INIT_FAILURE;
@@ -881,7 +981,7 @@ static OM_uint32
 eapGssSmInitAuthenticate(OM_uint32 *minor,
                          gss_cred_id_t cred GSSEAP_UNUSED,
                          gss_ctx_id_t ctx,
-                         gss_name_t target GSSEAP_UNUSED,
+                         gss_const_name_t target GSSEAP_UNUSED,
                          gss_OID mech GSSEAP_UNUSED,
                          OM_uint32 reqFlags GSSEAP_UNUSED,
                          OM_uint32 timeReq GSSEAP_UNUSED,
@@ -962,7 +1062,7 @@ static OM_uint32
 eapGssSmInitGssFlags(OM_uint32 *minor,
                      gss_cred_id_t cred GSSEAP_UNUSED,
                      gss_ctx_id_t ctx,
-                     gss_name_t target GSSEAP_UNUSED,
+                     gss_const_name_t target GSSEAP_UNUSED,
                      gss_OID mech GSSEAP_UNUSED,
                      OM_uint32 reqFlags GSSEAP_UNUSED,
                      OM_uint32 timeReq GSSEAP_UNUSED,
@@ -991,7 +1091,7 @@ static OM_uint32
 eapGssSmInitGssChannelBindings(OM_uint32 *minor,
                                gss_cred_id_t cred GSSEAP_UNUSED,
                                gss_ctx_id_t ctx,
-                               gss_name_t target GSSEAP_UNUSED,
+                               gss_const_name_t target GSSEAP_UNUSED,
                                gss_OID mech GSSEAP_UNUSED,
                                OM_uint32 reqFlags GSSEAP_UNUSED,
                                OM_uint32 timeReq GSSEAP_UNUSED,
@@ -1006,6 +1106,9 @@ eapGssSmInitGssChannelBindings(OM_uint32 *minor,
     krb5_data data;
     krb5_checksum cksum;
     gss_buffer_desc cksumBuffer;
+#ifdef HAVE_HEIMDAL_VERSION
+    krb5_crypto krbCrypto;
+#endif
 
     if (chanBindings == GSS_C_NO_CHANNEL_BINDINGS ||
         chanBindings->application_data.length == 0)
@@ -1017,10 +1120,25 @@ eapGssSmInitGssChannelBindings(OM_uint32 *minor,
 
     gssBufferToKrbData(&chanBindings->application_data, &data);
 
+#ifdef HAVE_HEIMDAL_VERSION
+    code = krb5_crypto_init(krbContext, &ctx->rfc3961Key, 0, &krbCrypto);
+    if (code != 0) {
+        *minor = code;
+        return GSS_S_FAILURE;
+    }
+
+    code = krb5_create_checksum(krbContext, krbCrypto,
+                                KEY_USAGE_GSSEAP_CHBIND_MIC,
+                                ctx->checksumType,
+                                data.data, data.length,
+                                &cksum);
+    krb5_crypto_destroy(krbContext, krbCrypto);
+#else
     code = krb5_c_make_checksum(krbContext, ctx->checksumType,
                                 &ctx->rfc3961Key,
                                 KEY_USAGE_GSSEAP_CHBIND_MIC,
                                 &data, &cksum);
+#endif /* HAVE_HEIMDAL_VERSION */
     if (code != 0) {
         *minor = code;
         return GSS_S_FAILURE;
@@ -1031,14 +1149,14 @@ eapGssSmInitGssChannelBindings(OM_uint32 *minor,
 
     major = duplicateBuffer(minor, &cksumBuffer, outputToken);
     if (GSS_ERROR(major)) {
-        krb5_free_checksum_contents(krbContext, &cksum);
+        KRB_CHECKSUM_FREE(krbContext, &cksum);
         return major;
     }
 
     *minor = 0;
     *smFlags |= SM_FLAG_OUTPUT_TOKEN_CRITICAL;
 
-    krb5_free_checksum_contents(krbContext, &cksum);
+    KRB_CHECKSUM_FREE(krbContext, &cksum);
 
     return GSS_S_CONTINUE_NEEDED;
 }
@@ -1047,7 +1165,7 @@ static OM_uint32
 eapGssSmInitInitiatorMIC(OM_uint32 *minor,
                          gss_cred_id_t cred GSSEAP_UNUSED,
                          gss_ctx_id_t ctx,
-                         gss_name_t target GSSEAP_UNUSED,
+                         gss_const_name_t target GSSEAP_UNUSED,
                          gss_OID mech GSSEAP_UNUSED,
                          OM_uint32 reqFlags GSSEAP_UNUSED,
                          OM_uint32 timeReq GSSEAP_UNUSED,
@@ -1075,7 +1193,7 @@ static OM_uint32
 eapGssSmInitReauthCreds(OM_uint32 *minor,
                         gss_cred_id_t cred,
                         gss_ctx_id_t ctx,
-                        gss_name_t target GSSEAP_UNUSED,
+                        gss_const_name_t target GSSEAP_UNUSED,
                         gss_OID mech GSSEAP_UNUSED,
                         OM_uint32 reqFlags GSSEAP_UNUSED,
                         OM_uint32 timeReq GSSEAP_UNUSED,
@@ -1101,7 +1219,7 @@ static OM_uint32
 eapGssSmInitAcceptorMIC(OM_uint32 *minor,
                         gss_cred_id_t cred GSSEAP_UNUSED,
                         gss_ctx_id_t ctx,
-                        gss_name_t target GSSEAP_UNUSED,
+                        gss_const_name_t target GSSEAP_UNUSED,
                         gss_OID mech GSSEAP_UNUSED,
                         OM_uint32 reqFlags GSSEAP_UNUSED,
                         OM_uint32 timeReq GSSEAP_UNUSED,
@@ -1218,7 +1336,7 @@ OM_uint32
 gssEapInitSecContext(OM_uint32 *minor,
                      gss_cred_id_t cred,
                      gss_ctx_id_t ctx,
-                     gss_name_t target_name,
+                     gss_const_name_t target_name,
                      gss_OID mech_type,
                      OM_uint32 req_flags,
                      OM_uint32 time_req,
@@ -1305,9 +1423,17 @@ cleanup:
 
 OM_uint32 GSSAPI_CALLCONV
 gss_init_sec_context(OM_uint32 *minor,
+#ifdef HAVE_HEIMDAL_VERSION
+                     gss_const_cred_id_t cred,
+#else
                      gss_cred_id_t cred,
+#endif
                      gss_ctx_id_t *context_handle,
+#ifdef HAVE_HEIMDAL_VERSION
+                     gss_const_name_t target_name,
+#else
                      gss_name_t target_name,
+#endif
                      gss_OID mech_type,
                      OM_uint32 req_flags,
                      OM_uint32 time_req,
@@ -1344,7 +1470,7 @@ gss_init_sec_context(OM_uint32 *minor,
     GSSEAP_MUTEX_LOCK(&ctx->mutex);
 
     major = gssEapInitSecContext(minor,
-                                 cred,
+                                 (gss_cred_id_t)cred,
                                  ctx,
                                  target_name,
                                  mech_type,
@@ -1362,6 +1488,8 @@ gss_init_sec_context(OM_uint32 *minor,
     if (GSS_ERROR(major))
         gssEapReleaseContext(&tmpMinor, context_handle);
 
-    gssEapTraceStatus( "gss_init_sec_context", major, *minor);
+    gssEapTraceStatus("gss_init_sec_context", major, *minor);
+
     return major;
 }
+

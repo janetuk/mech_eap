@@ -214,7 +214,7 @@ gssEapVerifyToken(OM_uint32 *minor,
 
 OM_uint32
 gssEapContextTime(OM_uint32 *minor,
-                  gss_ctx_id_t context_handle,
+                  gss_const_ctx_id_t context_handle,
                   OM_uint32 *time_rec)
 {
     *minor = 0;
@@ -353,8 +353,13 @@ gssEapMakeOrVerifyTokenMIC(OM_uint32 *minor,
     } else {
         size_t checksumSize;
 
+#ifdef HAVE_HEIMDAL_VERSION
+        code = krb5_checksumsize(krbContext, ctx->checksumType,
+                                 &checksumSize);
+#else
         code = krb5_c_checksum_length(krbContext, ctx->checksumType,
                                       &checksumSize);
+#endif
         if (code != 0)
             goto cleanup;
 
