@@ -1,7 +1,7 @@
 %global _moonshot_krb5 %{!?_moonshot_krb5:krb5-devel}%{?_moonshot_krb5}
 Name:		moonshot-gss-eap
-Version:	0.9.5
-Release:	1%{?dist}
+Version:	1.0.1
+Release:	2%{?dist}
 Summary:	Moonshot GSS-API Mechanism
 
 Group:		Security Tools
@@ -65,6 +65,6 @@ fgrep $oid_aes256 $mechfile ||echo eap-aes256 $oid_aes256 mech_eap.so >>$mechfil
 
 
 %changelog
-* Wed Sep 28 2011  <hartmans@moonbuildcentos.dev.ja.net> - 0.9.5-2
+* Wed Sep 28 2011  <hartmans@moonbuildcentos.dev.ja.net> - 1.0.1-2
 - Add radius_ad plugin
 
