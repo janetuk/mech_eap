@@ -4,9 +4,9 @@ Priority: optional
 Maintainer: Sam Hartman <hartmans@debian.org>
 Build-Depends: debhelper (>= 9), autotools-dev, libshibsp-dev (>= 2.5+dfsg~moonshot5), 
     libradsec-dev (>=0.0.4), libkrb5-dev (>= 1.9.1+dfsg-2), 
-    libshibresolver-dev|libshib-resolver-dev, libjansson-dev, moonshot-ui-dev (>= 0.6-2), libssl1.0-dev|libssl-dev (<= 1.1.0), libboost-dev, liblog4shib-dev|liblog4c++-dev, dh-autoreconf
+    libshibresolver-dev|libshib-resolver-dev, libjansson-dev, moonshot-ui-dev (>= 1.0), libssl-dev | libssl1.0-dev, libboost-dev, liblog4shib-dev|liblog4c++-dev, dh-autoreconf
 Build-Conflicts: libgss-dev
-Standards-Version: 3.9.8
+Standards-Version: 4.1.1
 Homepage: http://www.project-moonshot.org/
 Vcs-Git: http://www.project-moonshot.org/git/moonshot.git
 #Vcs-Browser: http://git.debian.org/?p=collab-maint/moonshot-gss-eap.git;a=summary
