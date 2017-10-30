@@ -1,3 +1,4 @@
+# On build branches, almost everything goes into git (?!)
 autom4te.cache
 mech_eap.spec
 mech_eap*tar*

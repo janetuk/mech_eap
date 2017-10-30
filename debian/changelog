@@ -1,8 +1,32 @@
+moonshot-gss-eap (1.0.1-1) unstable; urgency=medium
+
+  * New upstream version
+  * supports openssl 1.1.0, Closes: #848680
+  * standards-version  4.1.1
+  * No longer create /usr/etc/gss/mech; that was never desired in Debian but could be triggered by modern libgssapi-krb5-2
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 30 Oct 2017 14:54:01 -0400
+
+moonshot-gss-eap (1.0.1-0) unstable; urgency=medium
+
+  * Fixed https://bugs.launchpad.net/moonshot/+bug/1707679
+
+ -- Painless Security <build@painless-security.com>  Mon, 31 Jul 2017 12:39:00 -0500
+
+moonshot-gss-eap (1.0.0-0) unstable; urgency=medium
+
+  * Fixed https://bugs.launchpad.net/moonshot/+bug/1705714.
+    Refactored a static object whose destructor was responsible for
+    de-initializing the ShibResolver library.
+
+ -- Painless Security <build@painless-security.com>  Mon, 24 Jul 2017 23:16:00 -0500
+
 moonshot-gss-eap (0.9.5-3) unstable; urgency=medium
 
   * Build depend against openssl 1.0, Closes: #828440
 
  -- Sam Hartman <hartmans@debian.org>  Mon, 19 Dec 2016 09:03:47 -0500
+
 
 moonshot-gss-eap (0.9.5-2) unstable; urgency=medium
 
