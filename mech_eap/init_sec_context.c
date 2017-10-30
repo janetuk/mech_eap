@@ -387,27 +387,39 @@ static int cert_to_byte_array(X509 *cert, unsigned char **bytes)
 
 static int sha256(unsigned char *bytes, int len, unsigned char *hash)
 {
-	EVP_MD_CTX ctx;
+	EVP_MD_CTX *ctx;
 	unsigned int hash_len;
+	int retval = 0;
 
-	EVP_MD_CTX_init(&ctx);
-	if (!EVP_DigestInit_ex(&ctx, EVP_sha256(), NULL)) {
+	/* Openssl 1.1 prefers EVP_MD_CTX_new to _create, but supports
+	 * the older alias.  For compatibility with 1.0 and 1.1, use
+	 * this alias.*/
+	
+	ctx = EVP_MD_CTX_create();
+	assert(ctx != NULL);
+	if (!EVP_DigestInit_ex(ctx, EVP_sha256(), NULL)) {
 		printf("sha256(init_sec_context.c): EVP_DigestInit_ex failed: %s",
 			   ERR_error_string(ERR_get_error(), NULL));
-		return -1;
+		retval = -1;
+		goto cleanup;
 	}
-    if (!EVP_DigestUpdate(&ctx, bytes, len)) {
+    if (!EVP_DigestUpdate(ctx, bytes, len)) {
 		printf("sha256(init_sec_context.c): EVP_DigestUpdate failed: %s",
 				   ERR_error_string(ERR_get_error(), NULL));
-        return -1;
+		retval = -1;
+		goto cleanup;
 	}
-	if (!EVP_DigestFinal(&ctx, hash, &hash_len)) {
+	if (!EVP_DigestFinal(ctx, hash, &hash_len)) {
 		printf("sha256(init_sec_context.c): EVP_DigestFinal failed: %s",
 				   ERR_error_string(ERR_get_error(), NULL));
-		return -1;
+		retval = -1;
+		goto cleanup;
 	}
 
-	return hash_len;
+	retval = hash_len;
+ cleanup:
+	EVP_MD_CTX_destroy(ctx);
+	return retval;
 }
 
 static int peerValidateServerCert(int ok_so_far, X509* cert, void *ca_ctx)
