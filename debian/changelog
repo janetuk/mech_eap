@@ -1,3 +1,9 @@
+moonshot-gss-eap (1.0.1-2) experimental; urgency=medium
+
+  * I thought that libssl-dev|libssl1.0-dev would be enough to let the software build.  However because of libxmltooling-dev, libssl1.0-dev must come first.
+
+ -- Sam Hartman <hartmans@debian.org>  Tue, 07 Nov 2017 19:19:26 -0500
+
 moonshot-gss-eap (1.0.1-1) experimental; urgency=medium
 
   * New upstream version
