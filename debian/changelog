@@ -1,3 +1,9 @@
+moonshot-gss-eap (1.0.1-3) experimental; urgency=medium
+
+  * Fix warning redefinition of __bitwise, Closes: #866712
+
+ -- Sam Hartman <hartmans@debian.org>  Wed, 08 Nov 2017 10:14:39 -0500
+
 moonshot-gss-eap (1.0.1-2) experimental; urgency=medium
 
   * I thought that libssl-dev|libssl1.0-dev would be enough to let the software build.  However because of libxmltooling-dev, libssl1.0-dev must come first.
