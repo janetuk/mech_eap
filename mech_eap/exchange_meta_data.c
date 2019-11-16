@@ -50,13 +50,13 @@ gssEapExchangeMetaData(OM_uint32 *minor,
 }
 
 OM_uint32 GSSAPI_CALLCONV
-gss_exchange_meta_data(OM_uint32 *minor,
-                       gss_const_OID mech,
-                       gss_cred_id_t cred,
-                       gss_ctx_id_t *context_handle,
-                       const gss_name_t name,
-                       OM_uint32 req_flags,
-                       gss_const_buffer_t meta_data)
+gssspi_exchange_meta_data(OM_uint32 *minor,
+                          gss_const_OID mech,
+                          gss_cred_id_t cred,
+                          gss_ctx_id_t *context_handle,
+                          const gss_name_t name,
+                          OM_uint32 req_flags,
+                          gss_const_buffer_t meta_data)
 {
     gss_ctx_id_t ctx = *context_handle;
     OM_uint32 major;
