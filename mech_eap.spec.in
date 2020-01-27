@@ -64,6 +64,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Mon Jan 27 2020 Jisc <moonshot@jisc.ac.uk> - 1.1.12
+- Include NegoEx fixes from Luke Howard.
+
 * Tue Oct 14 2019 Jisc <moonshot@jisc.ac.uk> - 1.1.11
 - Upgrade to Hostap 2.9
 
