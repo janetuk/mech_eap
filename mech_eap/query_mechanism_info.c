@@ -59,9 +59,9 @@ gssQueryMechanismInfo(OM_uint32 *minor,
 }
 
 OM_uint32 GSSAPI_CALLCONV
-gss_query_mechanism_info(OM_uint32 *minor,
-                         gss_const_OID mech_oid,
-                         unsigned char auth_scheme[16])
+gssspi_query_mechanism_info(OM_uint32 *minor,
+                            gss_const_OID mech_oid,
+                            unsigned char auth_scheme[16])
 {
     return gssQueryMechanismInfo(minor, mech_oid, auth_scheme);
 }

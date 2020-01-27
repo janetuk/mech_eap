@@ -118,6 +118,25 @@ cleanup:
 }
 
 static OM_uint32
+addEnctypeIntegerToBufferSet(OM_uint32 *minor,
+                             krb5_enctype encryptionType,
+                             gss_buffer_set_t *dataSet)
+{
+    unsigned char enctypeBuf[4];
+    gss_buffer_desc buf;
+
+    enctypeBuf[0] = (encryptionType      ) & 0xff;
+    enctypeBuf[1] = (encryptionType >>  8) & 0xff;
+    enctypeBuf[2] = (encryptionType >> 16) & 0xff;
+    enctypeBuf[3] = (encryptionType >> 24) & 0xff;
+
+    buf.length = sizeof(enctypeBuf);
+    buf.value = enctypeBuf;
+
+    return gss_add_buffer_set_member(minor, &buf, dataSet);
+}
+
+static OM_uint32
 inquireNegoExKey(OM_uint32 *minor,
                   gss_const_ctx_id_t ctx,
                   const gss_OID desired_object,
@@ -143,7 +162,7 @@ inquireNegoExKey(OM_uint32 *minor,
      */
     if (desired_object->length == 11 &&
         memcmp(desired_object->elements,
-               "\x2a\x86\x48\x86\xf7\x12\x01\x02\x02\x05\x07", 11) == 0)
+               "\x2a\x86\x48\x86\xf7\x12\x01\x02\x02\x05\x11", 11) == 0)
         bInitiatorKey ^= 1;
 
     if (bInitiatorKey) {
@@ -173,7 +192,7 @@ inquireNegoExKey(OM_uint32 *minor,
     if (GSS_ERROR(major))
         goto cleanup;
 
-    major = addEnctypeOidToBufferSet(minor, ctx->encryptionType, dataSet);
+    major = addEnctypeIntegerToBufferSet(minor, ctx->encryptionType, dataSet);
     if (GSS_ERROR(major))
         goto cleanup;
 
@@ -208,12 +227,12 @@ static struct {
     },
     {
         /* GSS_C_INQ_NEGOEX_KEY */
-        { 11, "\x2a\x86\x48\x86\xf7\x12\x01\x02\x02\x05\x06" },
+        { 11, "\x2a\x86\x48\x86\xf7\x12\x01\x02\x02\x05\x10" },
         inquireNegoExKey
     },
     {
         /* GSS_C_INQ_NEGOEX_VERIFY_KEY */
-        { 11, "\x2a\x86\x48\x86\xf7\x12\x01\x02\x02\x05\x07" },
+        { 11, "\x2a\x86\x48\x86\xf7\x12\x01\x02\x02\x05\x11" },
         inquireNegoExKey
     },
 };

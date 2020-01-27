@@ -9,11 +9,9 @@ url="https://github.com/janetuk/mech_eap"
 arch=("x86_64")
 license=("BSD-3-Clause")
 makedepends=("automake" "autoconf" "libtool" "openssl" "jansson" "moonshot-ui" "libradsec" "krb5")
-source=("https://github.com/janetuk/$_pkgname/archive/v$pkgver.tar.gz")
-md5sums=('SKIP')
 
 build() {
-	cd "$srcdir/$_pkgname-$pkgver"
+	cd ..
 	sh autogen.sh
 	./configure \
 		--build=$CBUILD \
@@ -28,7 +26,7 @@ build() {
 }
 
 package() {
-	cd "$srcdir/$_pkgname-$pkgver"
+	cd ..
 	make DESTDIR="$pkgdir" install
 	mkdir -p "$pkgdir"/etc/gss/mech.d/
 	install -m644 "$srcdir/$_pkgname-$pkgver"/mech_eap/mech "$pkgdir"/etc/gss/mech.d/moonshot.conf

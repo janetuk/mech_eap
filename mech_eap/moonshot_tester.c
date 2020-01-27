@@ -42,6 +42,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <err.h>
+#include <stdlib.h>
+#include <config.h>
 
 static void display_status(char *m, OM_uint32 code, int type) {
     OM_uint32 min_stat;
@@ -75,7 +77,7 @@ dumpAttribute(OM_uint32 *minor,
     unsigned int i;
 
     printf("[%.*s]\n", (int)attribute->length, (char *)attribute->value);
-
+#if !HAVE_HEIMDAL_VERSION
     while (more != 0) {
         value.value = NULL;
         display_value.value = NULL;
@@ -103,6 +105,7 @@ dumpAttribute(OM_uint32 *minor,
         gss_release_buffer(&tmp, &display_value);
     }
     printf("\n");
+#endif
 }
 
 static OM_uint32
@@ -126,10 +129,7 @@ enumerateAttributes(OM_uint32 *minor,
         for (i = 0; i < attrs->count; i++)
             dumpAttribute(minor, name, &attrs->elements[i], noisy);
     }
-
-    gss_release_oid(&tmp, &mech);
     gss_release_buffer_set(&tmp, &attrs);
-
     return major;
 }
 
@@ -147,12 +147,14 @@ showLocalIdentity(OM_uint32 *minor, gss_name_t name)
     printf("Username: %-*s\n", (int)client_name.length, (char *)client_name.value);
 
 
+#if !HAVE_HEIMDAL_VERSION
     major = gss_localname(minor, name, GSS_C_NO_OID, &buf);
     if (major == GSS_S_COMPLETE)
         printf("localname: %-*s\n", (int)buf.length, (char *)buf.value);
     else if (major != GSS_S_UNAVAILABLE)
         display_status("gss_localname", major, *minor);
     gss_release_buffer(minor, &buf);
+#endif
     return major;
 }
 
@@ -227,7 +229,7 @@ int main() {
     }
 
 
-    enumerateAttributes(&minor, client_name, TRUE);
+    enumerateAttributes(&minor, client_name, 1);
     showLocalIdentity(&minor, client_name);
 
     gss_delete_sec_context(&minor, &client_ctx, GSS_C_NO_BUFFER);
