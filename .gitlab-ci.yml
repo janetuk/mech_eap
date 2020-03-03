@@ -244,6 +244,12 @@ ubuntu18-noshib:
   image: $DOCKER_REGISTRY_URL/ubuntu18:latest
   <<: *debiancommon-noshib
 
+ubuntu20-noshib:
+  variables:
+    CI_JOB_NAME: ubuntu20
+  image: $DOCKER_REGISTRY_URL/ubuntu20:latest
+  <<: *debiancommon-noshib
+
 alpine38:
   image: $DOCKER_REGISTRY_URL/alpine38:latest
   variables:
