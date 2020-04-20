@@ -236,7 +236,6 @@ json_t* gss_eap_simplesaml_assertion_provider::getJsonAssertion() const
     json_t *jattributes = NULL;;
     xmlXPathContextPtr xpathCtx = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
-    const xmlChar* xpathExpr = NULL;
     int i = 0;
 
     if (!this->m_assertion)
@@ -258,29 +257,18 @@ json_t* gss_eap_simplesaml_assertion_provider::getJsonAssertion() const
     jattributes = json_object();
     json_object_set_new(jassertion, "attributes", jattributes);
 
-    xpathExpr = (const xmlChar*) "//saml:Assertion/saml:AttributeStatement/saml:Attribute";
-    xpathObj = xmlXPathEvalExpression(xpathExpr, xpathCtx);
-    if(xpathObj == NULL) {
-        fprintf(stderr,"Error: unable to evaluate xpath expression\n");
-        goto cleanup;
-    }
-    if (!xmlXPathNodeSetIsEmpty(xpathObj->nodesetval))
+    xpathObj = xmlXPathEvalExpression((const xmlChar*) "//saml:Assertion/saml:AttributeStatement/saml:Attribute",
+                                      xpathCtx);
+    if(xpathObj != NULL && !xmlXPathNodeSetIsEmpty(xpathObj->nodesetval))
         for (i=0; i<xpathObj->nodesetval->nodeNr; i++)
             processAttribute(xpathObj->nodesetval->nodeTab[i], jattributes);
 
     xmlXPathFreeObject(xpathObj);
-    xpathExpr = (const xmlChar*) "//saml:Assertion/saml:Subject/saml:NameID";
-    xpathObj = xmlXPathEvalExpression(xpathExpr, xpathCtx);
-    if(xpathObj == NULL) {
-        fprintf(stderr,"Error: unable to evaluate xpath expression\n");
-        goto cleanup;
-    }
-    if (!xmlXPathNodeSetIsEmpty(xpathObj->nodesetval)) {
+    xpathObj = xmlXPathEvalExpression((const xmlChar*) "//saml:Assertion/saml:Subject/saml:NameID", xpathCtx);
+    if(xpathObj != NULL && !xmlXPathNodeSetIsEmpty(xpathObj->nodesetval)) {
         json_t *name_id = processNameID(xpathObj->nodesetval->nodeTab[0]);
         json_object_set_new(jassertion, "nameid", name_id);
     }
-
-    return jassertion;
 
 cleanup:
     xmlXPathFreeObject(xpathObj);
