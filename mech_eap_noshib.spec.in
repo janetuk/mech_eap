@@ -56,7 +56,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/moonshot_tester
 %exclude %{_libdir}/gss/mech_eap.la
 %{_includedir}/gssapi/*.h
-%exclude %{_libdir}/krb5/plugins/authdata/*
 %if 0%{?el6}
 %{_sysconfdir}/gss/mech
 %else
