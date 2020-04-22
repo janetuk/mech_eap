@@ -1,8 +1,10 @@
-moonshot-gss-eap (1.1.13.DIST) unstable; urgency=medium
+moonshot-gss-eap (1.2.0.DIST) unstable; urgency=medium
 
-  * TBD
+  * Switch to semantic versioning
+  * Improve the simple SAML implementation
+  * Use the simple SAML attribute provider for the noshib version
 
- -- Jisc <moonshot@jisc.ac.uk>  Mon, 27 Jan 2020 00:00:00 +0000
+ -- Jisc <moonshot@jisc.ac.uk>  Wed, 22 Apr 2020 00:00:00 +0000
 
 moonshot-gss-eap (1.1.12.DIST) unstable; urgency=medium
 

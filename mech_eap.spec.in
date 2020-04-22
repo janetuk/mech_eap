@@ -64,6 +64,11 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Wed Mar 22 2020 Jisc <moonshot@jisc.ac.uk> - 1.2.0
+- Switch to semantic versioning
+- Improve the simple SAML implementation
+- Use the simple SAML attribute provider for the noshib version
+
 * Mon Jan 27 2020 Jisc <moonshot@jisc.ac.uk> - 1.1.12
 - Include NegoEx fixes from Luke Howard.
 
