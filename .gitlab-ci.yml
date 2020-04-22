@@ -283,7 +283,6 @@ alpine311:
 
 alpine311_armhf:
   image: $DOCKER_REGISTRY_URL/alpine311_arm:latest
-  when: manual
   variables:
     APKBUILD: APKBUILD.in.alpine39
   <<: *alpinecommon
