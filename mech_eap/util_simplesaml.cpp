@@ -38,6 +38,9 @@
 #include "util_simplesaml.h"
 #include <string.h>
 
+#include <libxml/xpath.h>
+#include <libxml/xpathInternals.h>
+
 /*
  * gss_eap_saml_assertion_provider is for retrieving the underlying
  * assertion.
@@ -190,31 +193,25 @@ void gss_eap_simplesaml_assertion_provider::processAttribute(xmlNodePtr attribut
     char *nameFormat = (char*) xmlGetProp(attribute, (const xmlChar*) "NameFormat");
     xmlNodePtr value = NULL;
     if (name && nameFormat) {
-        char* full_name = (char*) malloc(strlen(name) + strlen(nameFormat) + 2);
-        strcpy(full_name, nameFormat);
-        strcat(full_name, (char*) " ");
-        strcat(full_name, name);
+        int len = strlen(name) + strlen(nameFormat) + 2;
+        char* full_name = (char*) malloc(len);
+        snprintf(full_name, len, "%s %s", nameFormat, name);
         json_t *values = json_array();
-        for (value = attribute->children; value; value = value->next)
+        for (value = attribute->children; value; value = value->next) {
             if (value->type == XML_ELEMENT_NODE && strcmp((const char*) value->name, "AttributeValue") == 0) {
                 xmlChar* node_value = xmlNodeListGetString(value->doc, value->children, 1);
                 json_array_append_new(values, json_string((char*) node_value));
                 xmlFree(node_value);
             }
-        json_object_set_new(jattributes, full_name, values);
+        }
+        if (json_array_size(values) > 0)
+            json_object_set_new(jattributes, full_name, values);
+        else
+            json_decref(values);
         free(full_name);
     }
     free(name);
     free(nameFormat);
-}
-
-void gss_eap_simplesaml_assertion_provider::processAttributeStatement(xmlNodePtr attributeStatement, json_t *jattributes) const
-{
-    xmlNodePtr node = NULL;
-    for (node = attributeStatement->children; node; node = node->next) {
-        if (node->type == XML_ELEMENT_NODE && strcmp((const char*) node->name, "Attribute") == 0)
-            processAttribute(node, jattributes);
-    }
 }
 
 json_t *gss_eap_simplesaml_assertion_provider::processNameID(xmlNodePtr name_id_node) const
@@ -233,39 +230,49 @@ json_t *gss_eap_simplesaml_assertion_provider::processNameID(xmlNodePtr name_id_
     return jnameid;
 }
 
-json_t *gss_eap_simplesaml_assertion_provider::processSubject(xmlNodePtr subject) const
-{
-    xmlNodePtr node = NULL;
-    for (node = subject->children; node; node = node->next) {
-        if (node->type == XML_ELEMENT_NODE && strcmp((const char*) node->name, "NameID") == 0)
-            return processNameID(node);
-    }
-    return NULL;
-}
-
 json_t* gss_eap_simplesaml_assertion_provider::getJsonAssertion() const
 {
-    if (!this->m_assertion)
-        return NULL;
-    xmlNodePtr assertion = xmlDocGetRootElement(this->m_assertion);
-    xmlNodePtr node = NULL;
-    json_t *jassertion = json_object();
-    json_t *jattributes = json_object();
-    json_t *name_id = NULL;
+    json_t *jassertion = NULL;
+    json_t *jattributes = NULL;;
+    xmlXPathContextPtr xpathCtx = NULL;
+    xmlXPathObjectPtr xpathObj = NULL;
+    int i = 0;
 
-    for (node = assertion->children; node; node = node->next) {
-        if (node->type == XML_ELEMENT_NODE && strcmp((const char*) node->name, "AttributeStatement") == 0) {
-            processAttributeStatement(node, jattributes);
-        }
-        if (node->type == XML_ELEMENT_NODE && strcmp((const char*) node->name, "Subject") == 0) {
-            name_id = processSubject(node);
-        }
+    if (!this->m_assertion)
+        goto cleanup;
+
+    xpathCtx = xmlXPathNewContext(this->m_assertion);
+    if(xpathCtx == NULL) {
+        fprintf(stderr,"Error: unable to create new XPath context \n");
+        goto cleanup;
     }
 
-    json_object_set_new(jassertion, "attributes", jattributes);
-    if (name_id)
-        json_object_set_new(jassertion, "nameid", name_id);
+    if (xmlXPathRegisterNs(xpathCtx, (const xmlChar*) "saml",
+                           (const xmlChar*) "urn:oasis:names:tc:SAML:2.0:assertion")) {
+        fprintf(stderr,"Error: failed to register namespaces\n");
+        goto cleanup;
+    }
 
+    jassertion = json_object();
+    jattributes = json_object();
+    json_object_set_new(jassertion, "attributes", jattributes);
+
+    xpathObj = xmlXPathEvalExpression((const xmlChar*) "//saml:Assertion/saml:AttributeStatement/saml:Attribute",
+                                      xpathCtx);
+    if(xpathObj != NULL && !xmlXPathNodeSetIsEmpty(xpathObj->nodesetval))
+        for (i=0; i<xpathObj->nodesetval->nodeNr; i++)
+            processAttribute(xpathObj->nodesetval->nodeTab[i], jattributes);
+
+    xmlXPathFreeObject(xpathObj);
+    xpathObj = xmlXPathEvalExpression((const xmlChar*) "//saml:Assertion/saml:Subject/saml:NameID", xpathCtx);
+    if(xpathObj != NULL && !xmlXPathNodeSetIsEmpty(xpathObj->nodesetval)) {
+        json_t *name_id = processNameID(xpathObj->nodesetval->nodeTab[0]);
+        json_object_set_new(jassertion, "nameid", name_id);
+    }
+
+cleanup:
+    xmlXPathFreeObject(xpathObj);
+    xmlXPathFreeContext(xpathCtx);
     return jassertion;
 }
 

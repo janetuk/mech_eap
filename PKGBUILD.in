@@ -29,5 +29,5 @@ package() {
 	cd ..
 	make DESTDIR="$pkgdir" install
 	mkdir -p "$pkgdir"/etc/gss/mech.d/
-	install -m644 "$srcdir/$_pkgname-$pkgver"/mech_eap/mech "$pkgdir"/etc/gss/mech.d/moonshot.conf
+	install -m644 mech_eap/mech "$pkgdir"/etc/gss/mech.d/moonshot.conf
 }

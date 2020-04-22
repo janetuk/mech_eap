@@ -95,9 +95,7 @@ private:
     xmlDocPtr m_assertion;
     bool m_authenticated;
     void processAttribute(xmlNodePtr attribute, json_t *jattributes) const;
-    void processAttributeStatement(xmlNodePtr attributeStatement, json_t *jattributes) const;
     json_t *processNameID(xmlNodePtr nameid) const;
-    json_t *processSubject(xmlNodePtr subject) const;
 };
 
 struct gss_eap_nameid_attr_provider : gss_eap_attr_provider {
@@ -140,7 +138,6 @@ public:
 
 private:
     bool getAssertion(int *authenticated, json_t **jassertion) const;
-    xmlNodePtr getNameIDNode(xmlDocPtr assertion) const;
 };
 
 struct gss_eap_saml_attr_provider : gss_eap_attr_provider {

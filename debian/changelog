@@ -1,3 +1,11 @@
+moonshot-gss-eap (1.2.0.DIST) unstable; urgency=medium
+
+  * Switch to semantic versioning
+  * Improve the simple SAML implementation
+  * Use the simple SAML attribute provider for the noshib version
+
+ -- Jisc <moonshot@jisc.ac.uk>  Wed, 22 Apr 2020 00:00:00 +0000
+
 moonshot-gss-eap (1.1.12.DIST) unstable; urgency=medium
 
   * Include NegoEx fixes from Luke Howard.
