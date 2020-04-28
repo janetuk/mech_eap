@@ -1,9 +1,6 @@
 stages:
 - build
 
-before_script:
-    - rm -fr build SOURCES RPMS
-
 .centoscommon: &centoscommon
   stage: build
   except:
@@ -68,7 +65,7 @@ before_script:
     - rm -fr build deps.zip
     - debuild -us -uc
     - mkdir build
-    - cp ../*.deb ../*.dsc ../*tar* build
+    - mv ../*.deb ../*.dsc ../*tar* build
   artifacts:
     expire_in: 6 months
     paths:
@@ -90,7 +87,7 @@ before_script:
     - cp debian/rules_noshib debian/rules
     - debuild -us -uc
     - mkdir build
-    - cp ../*.deb ../*.dsc ../*tar* build
+    - mv ../*.deb ../*.dsc ../*tar* build
   artifacts:
     expire_in: 6 months
     paths:
