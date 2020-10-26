@@ -96,7 +96,6 @@ stages:
   tags:
     - moonshot
   script:
-    - cp $APKBUILD APKBUILD.in
     - "for i in ui libradsec; do wget --header \"PRIVATE-TOKEN: $TOKEN\" https://gitlab.ci.ti.ja.net/api/v4/projects/moonshot%2F$i/jobs/artifacts/master/download?job=$CI_JOB_NAME -O deps.zip; unzip deps.zip; done"
     - apk add apks/*/*.apk --allow-untrusted
     - rm -fr apks deps.zip
@@ -110,7 +109,7 @@ stages:
     - sudo -u tmpuser abuild-keygen -an
     - sudo -u tmpuser abuild -r
     - mkdir apks
-    - mv /home/tmpuser/packages/moonshot/* apks
+    - mv /home/tmpuser/packages/*/* apks
   artifacts:
     expire_in: 6 months
     paths:
@@ -128,20 +127,12 @@ centos8:
   image: $DOCKER_REGISTRY_URL/centos8:latest
   <<: *centoscommon
 
-debian8:
-  image: $DOCKER_REGISTRY_URL/debian8:latest
-  <<: *debiancommon
-
 debian9:
   image: $DOCKER_REGISTRY_URL/debian9:latest
   <<: *debiancommon
 
 debian10:
   image: $DOCKER_REGISTRY_URL/debian10:latest
-  <<: *debiancommon
-
-raspbian8:
-  image: $DOCKER_REGISTRY_URL/raspbian8:latest
   <<: *debiancommon
 
 raspbian9:
@@ -182,12 +173,6 @@ centos8-noshib:
   image: $DOCKER_REGISTRY_URL/centos8:latest
   <<: *centoscommon-noshib
 
-debian8-noshib:
-  variables:
-    CI_JOB_NAME: debian8
-  image: $DOCKER_REGISTRY_URL/debian8:latest
-  <<: *debiancommon-noshib
-
 debian9-noshib:
   variables:
     CI_JOB_NAME: debian9
@@ -198,12 +183,6 @@ debian10-noshib:
   variables:
     CI_JOB_NAME: debian10
   image: $DOCKER_REGISTRY_URL/debian10:latest
-  <<: *debiancommon-noshib
-
-raspbian8-noshib:
-  variables:
-    CI_JOB_NAME: raspbian8
-  image: $DOCKER_REGISTRY_URL/raspbian8:latest
   <<: *debiancommon-noshib
 
 raspbian9-noshib:
@@ -236,50 +215,26 @@ ubuntu20-noshib:
   image: $DOCKER_REGISTRY_URL/ubuntu20:latest
   <<: *debiancommon-noshib
 
-alpine38:
-  image: $DOCKER_REGISTRY_URL/alpine38:latest
-  variables:
-    APKBUILD: APKBUILD.in.alpine38
-  <<: *alpinecommon
-
-alpine38_armhf:
-  image: $DOCKER_REGISTRY_URL/alpine38_arm:latest
-  variables:
-    APKBUILD: APKBUILD.in.alpine38
-  <<: *alpinecommon
-
 alpine39:
   image: $DOCKER_REGISTRY_URL/alpine39:latest
-  variables:
-    APKBUILD: APKBUILD.in.alpine39
   <<: *alpinecommon
 
 alpine39_armhf:
   image: $DOCKER_REGISTRY_URL/alpine39_arm:latest
-  variables:
-    APKBUILD: APKBUILD.in.alpine39
   <<: *alpinecommon
 
 alpine311:
   image: $DOCKER_REGISTRY_URL/alpine311:latest
-  variables:
-    APKBUILD: APKBUILD.in.alpine39
   <<: *alpinecommon
 
 alpine311_armhf:
   image: $DOCKER_REGISTRY_URL/alpine311_arm:latest
-  variables:
-    APKBUILD: APKBUILD.in.alpine39
   <<: *alpinecommon
 
 alpine311:
   image: $DOCKER_REGISTRY_URL/alpine311:latest
-  variables:
-    APKBUILD: APKBUILD.in.alpine39
   <<: *alpinecommon
 
 alpine311_armhf:
   image: $DOCKER_REGISTRY_URL/alpine311_arm:latest
-  variables:
-    APKBUILD: APKBUILD.in.alpine39
   <<: *alpinecommon
