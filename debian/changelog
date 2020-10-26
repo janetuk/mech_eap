@@ -1,8 +1,8 @@
 moonshot-gss-eap (1.2.1.DIST) unstable; urgency=medium
 
-  * TBD
+  * CI/CD fixes
 
- -- Jisc <moonshot@jisc.ac.uk>  Wed, 22 Apr 2020 00:00:00 +0000
+ -- Jisc <moonshot@jisc.ac.uk>  Mon, 26 Oct 2020 00:00:00 +0000
 
 moonshot-gss-eap (1.2.0.DIST) unstable; urgency=medium
 

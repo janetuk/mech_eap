@@ -64,6 +64,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Mon Oct 26 2020 Jisc <moonshot@jisc.ac.uk> - 1.2.1
+- CI/CD fixes
+
 * Wed Mar 22 2020 Jisc <moonshot@jisc.ac.uk> - 1.2.0
 - Switch to semantic versioning
 - Improve the simple SAML implementation
