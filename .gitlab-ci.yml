@@ -120,10 +120,6 @@ stages:
     paths:
         - apks/*/*.apk
 
-centos6:
-  image: $DOCKER_REGISTRY_URL/centos6:latest
-  <<: *centoscommon
-
 centos7:
   image: $DOCKER_REGISTRY_URL/centos7:latest
   <<: *centoscommon
@@ -161,12 +157,6 @@ ubuntu18:
 ubuntu20:
   image: $DOCKER_REGISTRY_URL/ubuntu20:latest
   <<: *debiancommon
-
-centos6-noshib:
-  variables:
-    CI_JOB_NAME: centos6
-  image: $DOCKER_REGISTRY_URL/centos6:latest
-  <<: *centoscommon-noshib
 
 centos7-noshib:
   variables:
