@@ -214,6 +214,7 @@ alpine311_armhf:
   <<: *alpinecommon
 
 alpine313:
+  when: manual
   image: $DOCKER_REGISTRY_URL/alpine313:latest
   <<: *alpinecommon
 
