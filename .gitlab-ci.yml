@@ -115,10 +115,6 @@ stages:
     paths:
         - apks/*/*.apk
 
-centos6:
-  image: $DOCKER_REGISTRY_URL/centos6:latest
-  <<: *centoscommon
-
 centos7:
   image: $DOCKER_REGISTRY_URL/centos7:latest
   <<: *centoscommon
@@ -154,12 +150,6 @@ ubuntu18:
 ubuntu20:
   image: $DOCKER_REGISTRY_URL/ubuntu20:latest
   <<: *debiancommon
-
-centos6-noshib:
-  variables:
-    CI_JOB_NAME: centos6
-  image: $DOCKER_REGISTRY_URL/centos6:latest
-  <<: *centoscommon-noshib
 
 centos7-noshib:
   variables:
@@ -215,14 +205,6 @@ ubuntu20-noshib:
   image: $DOCKER_REGISTRY_URL/ubuntu20:latest
   <<: *debiancommon-noshib
 
-alpine39:
-  image: $DOCKER_REGISTRY_URL/alpine39:latest
-  <<: *alpinecommon
-
-alpine39_armhf:
-  image: $DOCKER_REGISTRY_URL/alpine39_arm:latest
-  <<: *alpinecommon
-
 alpine311:
   image: $DOCKER_REGISTRY_URL/alpine311:latest
   <<: *alpinecommon
@@ -231,10 +213,11 @@ alpine311_armhf:
   image: $DOCKER_REGISTRY_URL/alpine311_arm:latest
   <<: *alpinecommon
 
-alpine311:
-  image: $DOCKER_REGISTRY_URL/alpine311:latest
+alpine313:
+  image: $DOCKER_REGISTRY_URL/alpine313:latest
   <<: *alpinecommon
 
-alpine311_armhf:
-  image: $DOCKER_REGISTRY_URL/alpine311_arm:latest
+alpine313_armhf:
+  when: manual
+  image: $DOCKER_REGISTRY_URL/alpine313_arm:latest
   <<: *alpinecommon

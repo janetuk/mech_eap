@@ -1,3 +1,9 @@
+moonshot-gss-eap (1.2.2.DIST) unstable; urgency=high
+
+  * Fix security issue with CA certificate validation
+
+ -- Jisc <moonshot@jisc.ac.uk>  Fri, 29 Jan 2021 00:00:00 +0000
+
 moonshot-gss-eap (1.2.1.DIST) unstable; urgency=medium
 
   * CI/CD fixes

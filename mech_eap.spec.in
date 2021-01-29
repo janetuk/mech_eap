@@ -64,6 +64,9 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+* Fri Jan 29 2021 Jisc <moonshot@jisc.ac.uk> - 1.2.2
+- Fix security issue with CA certificate validation
+
 * Mon Oct 26 2020 Jisc <moonshot@jisc.ac.uk> - 1.2.1
 - CI/CD fixes
 
