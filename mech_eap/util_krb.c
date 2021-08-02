@@ -236,6 +236,10 @@ gssEapDeriveRfc3961Key(OM_uint32 *minor,
             goto cleanup;
 
         memcpy(p, t.data, MIN(t.length, remain));
+#ifdef HAVE_HEIMDAL_VERSION
+	memset(t.data, 0, t.length);
+	krb5_data_free(&t);
+#endif
      }
 
     /* Finally, convert PRF output into a new key which we will return */
@@ -259,7 +263,6 @@ cleanup:
         krb5_free_keyblock_contents(krbContext, &kd);
 #ifdef HAVE_HEIMDAL_VERSION
     krb5_crypto_destroy(krbContext, krbCrypto);
-    krb5_data_free(&t);
 #else
     if (t.data != NULL) {
         memset(t.data, 0, t.length);
