@@ -238,7 +238,7 @@ gssEapDeriveRfc3961Key(OM_uint32 *minor,
         memcpy(p, t.data, MIN(t.length, remain));
 #ifdef HAVE_HEIMDAL_VERSION
 	memset(t.data, 0, t.length);
-	krb5_data_free(&t);
+	GSSEAP_FREE(t.data);
 #endif
      }
 
