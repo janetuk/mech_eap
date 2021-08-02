@@ -965,7 +965,7 @@ gssEapAcceptSecContext(OM_uint32 *minor,
      * credential handle.
      */
 
-    if (cred->name != GSS_C_NO_NAME) {
+    if (cred->name != GSS_C_NO_NAME && ctx->acceptorName == GSS_C_NO_NAME) {
         major = gssEapDuplicateName(minor, cred->name, &ctx->acceptorName);
         if (GSS_ERROR(major))
             goto cleanup;
