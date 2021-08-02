@@ -664,7 +664,6 @@ gss_eap_attr_ctx::releaseAnyNameMapping(gss_buffer_t type_id,
 void
 gss_eap_attr_ctx::exportToBuffer(gss_buffer_t buffer) const
 {
-    OM_uint32 minor;
     char *s;
 
     JSONObject obj = jsonRepresentation();
@@ -675,8 +674,8 @@ gss_eap_attr_ctx::exportToBuffer(gss_buffer_t buffer) const
 
     s = obj.dump(JSON_COMPACT);
 
-    if (GSS_ERROR(makeStringBuffer(&minor, s, buffer)))
-        throw std::bad_alloc();
+    buffer->length = strlen(s);
+    buffer->value = s;
 }
 
 /*
