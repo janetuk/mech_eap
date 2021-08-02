@@ -138,6 +138,10 @@ gssEapPseudoRandom(OM_uint32 *minor,
         p += t.length;
         desired_output_len -= t.length;
         i++;
+#ifdef HAVE_HEIMDAL_VERSION
+	memset(t.data, 0, t.length);
+	krb5_data_free(&t);
+#endif
     }
 
 cleanup:
@@ -149,7 +153,6 @@ cleanup:
     }
 #ifdef HAVE_HEIMDAL_VERSION
     krb5_crypto_destroy(krbContext, krbCrypto);
-    krb5_data_free(&t);
 #else
     if (t.data != NULL) {
         memset(t.data, 0, t.length);
