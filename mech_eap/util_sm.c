@@ -362,7 +362,7 @@ gssEapSmStep(OM_uint32 *minor,
 
 cleanup:
     gssEapReleaseInnerTokens(&tmpMinor, &inputTokens, 0);
-    gssEapReleaseInnerTokens(&tmpMinor, &inputTokens, 1);
+    gssEapReleaseInnerTokens(&tmpMinor, &outputTokens, 1);
 
     gss_release_buffer(&tmpMinor, &unwrappedOutputToken);
 
