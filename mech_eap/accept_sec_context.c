@@ -108,6 +108,8 @@ acceptReadyEap(OM_uint32 *minor, gss_ctx_id_t ctx, gss_cred_id_t cred)
     if (GSS_ERROR(major))
         return major;
 
+    sequenceFree(&tmpMinor, &ctx->seqState);
+
     major = sequenceInit(minor,
                          &ctx->seqState, ctx->recvSeq,
                          ((ctx->gssFlags & GSS_C_REPLAY_FLAG) != 0),
@@ -963,7 +965,7 @@ gssEapAcceptSecContext(OM_uint32 *minor,
      * credential handle.
      */
 
-    if (cred->name != GSS_C_NO_NAME) {
+    if (cred->name != GSS_C_NO_NAME && ctx->acceptorName == GSS_C_NO_NAME) {
         major = gssEapDuplicateName(minor, cred->name, &ctx->acceptorName);
         if (GSS_ERROR(major))
             goto cleanup;

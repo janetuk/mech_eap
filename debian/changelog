@@ -1,3 +1,9 @@
+moonshot-gss-eap (1.2.3.DIST) unstable; urgency=high
+
+  * Fixed a number of memory leaks (Thanks Luke Howard)
+
+ -- Jisc <moonshot@jisc.ac.uk>  Mon, 2 Aug 2021 00:00:00 +0000
+
 moonshot-gss-eap (1.2.2.DIST) unstable; urgency=high
 
   * Fix security issue with CA certificate validation

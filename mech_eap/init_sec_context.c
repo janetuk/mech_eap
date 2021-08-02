@@ -509,6 +509,12 @@ peerConfigFree(OM_uint32 *minor,
 {
     struct eap_peer_config *eapPeerConfig = &ctx->initiatorCtx.eapPeerConfig;
 
+    if (eapPeerConfig->chbind_config != NULL) {
+	GSSEAP_FREE(eapPeerConfig->chbind_config);
+	eapPeerConfig->chbind_config = NULL;
+        eapPeerConfig->chbind_config_len = 0;
+    }
+
     if (eapPeerConfig->identity != NULL) {
         GSSEAP_FREE(eapPeerConfig->identity);
         eapPeerConfig->identity = NULL;
@@ -988,6 +994,8 @@ cleanup:
         }
 
         *smFlags |= SM_FLAG_OUTPUT_TOKEN_CRITICAL;
+
+	wpabuf_free(resp);
     }
 
     wpabuf_set(&ctx->initiatorCtx.reqData, NULL, 0);
