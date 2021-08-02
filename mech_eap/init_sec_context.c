@@ -994,6 +994,8 @@ cleanup:
         }
 
         *smFlags |= SM_FLAG_OUTPUT_TOKEN_CRITICAL;
+
+	wpabuf_free(resp);
     }
 
     wpabuf_set(&ctx->initiatorCtx.reqData, NULL, 0);
