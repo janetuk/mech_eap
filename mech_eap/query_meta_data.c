@@ -38,7 +38,7 @@
 
 OM_uint32
 gssEapQueryMetaData(OM_uint32 *minor,
-                    gss_const_OID mech GSSEAP_UNUSED,
+                    gss_const_OID mech,
                     gss_cred_id_t cred,
                     gss_ctx_id_t *context_handle,
                     const gss_name_t name,
@@ -59,6 +59,8 @@ gssEapQueryMetaData(OM_uint32 *minor,
 
         if (isInitiator)
             ctx->flags |= CTX_FLAG_INITIATOR;
+
+        gssEapCanonicalizeOid(minor, (gss_OID)mech, 0, &ctx->mechanismUsed);
     }
 
     if (ctx->cred == GSS_C_NO_CREDENTIAL) {
