@@ -139,7 +139,6 @@ raspbian10:
 
 raspbian11:
   image: $DOCKER_REGISTRY_URL/raspbian11:latest
-  when: manual
   <<: *debiancommon
   tags:
     - arm
@@ -202,7 +201,6 @@ raspbian11-noshib:
   variables:
     CI_JOB_NAME: raspbian11
   image: $DOCKER_REGISTRY_URL/raspbian11:latest
-  when: manual
   <<: *debiancommon-noshib
   tags:
     - arm
@@ -230,12 +228,10 @@ alpine311_armhf:
     - arm
 
 alpine313:
-  when: manual
   image: $DOCKER_REGISTRY_URL/alpine313:latest
   <<: *alpinecommon
 
 alpine313_armhf:
-  when: manual
   image: $DOCKER_REGISTRY_URL/alpine313_arm:latest
   <<: *alpinecommon
   tags:
