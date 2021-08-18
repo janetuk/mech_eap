@@ -64,7 +64,10 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
-* Mon Aug 2 2021 Jisc <moonshot@jisc.ac.uk> - 1.2.3
+* Mon Aug 18 2021 Jisc <moonshot@jisc.ac.uk> - 1.2.4
+- Fixed error in gssEapQueryMetaData()
+
+* Mon Aug 2 2021 Jisc <moonshot@jisc.ac.uk> - 1.2.
 - Fixed a number of memory leaks (Thanks Luke Howard)
 
 * Fri Jan 29 2021 Jisc <moonshot@jisc.ac.uk> - 1.2.2
