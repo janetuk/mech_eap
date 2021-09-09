@@ -64,7 +64,7 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
-* Thu Sept 9 2021 Jisc <moonshot@jisc.ac.uk> - 1.2.5
+* Thu Sep 9 2021 Jisc <moonshot@jisc.ac.uk> - 1.2.5
 - Don't unconditionally set GSS_C_MUTUAL_FLAG
 
 * Mon Aug 18 2021 Jisc <moonshot@jisc.ac.uk> - 1.2.4
