@@ -1,8 +1,8 @@
 moonshot-gss-eap (1.2.5.DIST) unstable; urgency=high
 
-  * TBD
+  * Don't unconditionally set GSS_C_MUTUAL_FLAG
 
- -- Jisc <moonshot@jisc.ac.uk>  Mon, 18 Aug 2021 00:00:00 +0000
+ -- Jisc <moonshot@jisc.ac.uk>  Thu, 9 Sept 2021 00:00:00 +0000
 
 moonshot-gss-eap (1.2.4.DIST) unstable; urgency=high
 
