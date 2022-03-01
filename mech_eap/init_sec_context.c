@@ -97,14 +97,14 @@ peerGetConfig(void *ctx)
     return &gssCtx->initiatorCtx.eapPeerConfig;
 }
 
-static Boolean
+static bool
 peerGetBool(void *data, enum eapol_bool_var variable)
 {
     gss_ctx_id_t ctx = data;
     OM_uint32 flag;
 
     if (ctx == GSS_C_NO_CONTEXT)
-        return FALSE;
+        return false;
 
     flag = policyVariableToFlag(variable);
 
@@ -113,7 +113,7 @@ peerGetBool(void *data, enum eapol_bool_var variable)
 
 static void
 peerSetBool(void *data, enum eapol_bool_var variable,
-            Boolean value)
+            bool value)
 {
     gss_ctx_id_t ctx = data;
     OM_uint32 flag;
@@ -447,9 +447,9 @@ peerConfigInit(OM_uint32 *minor, gss_ctx_id_t ctx)
     }
 
     /* certs */
-    eapPeerConfig->ca_cert = cred->caCertificate.value;
-    eapPeerConfig->subject_match = cred->subjectNameConstraint.value;
-    eapPeerConfig->altsubject_match = cred->subjectAltNameConstraint.value;
+    eapPeerConfig->cert.ca_cert = cred->caCertificate.value;
+    eapPeerConfig->cert.subject_match = cred->subjectNameConstraint.value;
+    eapPeerConfig->cert.altsubject_match = cred->subjectAltNameConstraint.value;
     configBlobs[CONFIG_BLOB_CA_CERT].data = cred->caCertificateBlob.value;
     configBlobs[CONFIG_BLOB_CA_CERT].len = cred->caCertificateBlob.length;
 
@@ -480,18 +480,18 @@ peerConfigInit(OM_uint32 *minor, gss_ctx_id_t ctx)
          * EAP implementation, rather than an indirected string pointer.
          */
         if (cred->flags & CRED_FLAG_CONFIG_BLOB) {
-            eapPeerConfig->client_cert = "blob://client-cert";
+            eapPeerConfig->cert.client_cert = "blob://client-cert";
             configBlobs[CONFIG_BLOB_CLIENT_CERT].data = cred->clientCertificate.value;
             configBlobs[CONFIG_BLOB_CLIENT_CERT].len  = cred->clientCertificate.length;
 
-            eapPeerConfig->client_cert = "blob://private-key";
+            eapPeerConfig->cert.client_cert = "blob://private-key";
             configBlobs[CONFIG_BLOB_PRIVATE_KEY].data = cred->clientCertificate.value;
             configBlobs[CONFIG_BLOB_PRIVATE_KEY].len  = cred->privateKey.length;
         } else {
-            eapPeerConfig->client_cert = cred->clientCertificate.value;
-            eapPeerConfig->private_key = cred->privateKey.value;
+            eapPeerConfig->cert.client_cert = cred->clientCertificate.value;
+            eapPeerConfig->cert.private_key = cred->privateKey.value;
         }
-        eapPeerConfig->private_key_passwd = (char *)cred->password.value;
+        eapPeerConfig->cert.private_key_passwd = (char *)cred->password.value;
     }
 
 #ifdef HAVE_MOONSHOT_GET_IDENTITY
