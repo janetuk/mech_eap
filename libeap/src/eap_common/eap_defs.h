@@ -9,10 +9,6 @@
 #ifndef EAP_DEFS_H
 #define EAP_DEFS_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* RFC 3748 - Extensible Authentication Protocol (EAP) */
 
 #ifdef _MSC_VER
@@ -68,7 +64,7 @@ enum eap_erp_cryptosuite {
  * EAP Method Types as allocated by IANA:
  * http://www.iana.org/assignments/eap-numbers
  */
-typedef enum {
+enum eap_type {
 	EAP_TYPE_NONE = 0,
 	EAP_TYPE_IDENTITY = 1 /* RFC 3748 */,
 	EAP_TYPE_NOTIFICATION = 2 /* RFC 3748 */,
@@ -98,7 +94,7 @@ typedef enum {
 	EAP_TYPE_EKE = 53 /* RFC 6124 */,
 	EAP_TYPE_TEAP = 55 /* RFC 7170 */,
 	EAP_TYPE_EXPANDED = 254 /* RFC 3748 */
-} EapType;
+};
 
 
 /* SMI Network Management Private Enterprise Code for vendor specific types */
@@ -119,9 +115,5 @@ enum {
 #define EAP_EMSK_LEN 64
 #define EAP_EMSK_NAME_LEN 8
 #define ERP_MAX_KEY_LEN 64
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* EAP_DEFS_H */

@@ -9,7 +9,6 @@
 #include "includes.h"
 
 #include "common.h"
-#include "radius/radius.h"
 #include "crypto/ms_funcs.h"
 #include "crypto/sha1.h"
 #include "crypto/tls.h"
@@ -61,31 +60,12 @@ struct eap_ttls_data {
 
 	struct wpabuf *pending_phase2_req;
 	struct wpabuf *pending_resp;
-	int chbind_req_sent; /* channel binding request was sent */
-	int done_butfor_cb; /*we turned METHOD_DONE into METHOD_MAY_CONT to receive cb*/
-	EapDecision cbDecision;
+
 #ifdef EAP_TNC
 	int ready_for_tnc;
 	int tnc_started;
 #endif /* EAP_TNC */
 };
-
-
-/* draft-ietf-emu-chbind-13 section 5.3 */
-
-#ifdef _MSC_VER
-#pragma pack(push, 1)
-#endif /* _MSC_VER */
-
-struct chbind_hdr {
-	u16 len;
-	u8 nsid;
-} STRUCT_PACKED;
-
-#ifdef _MSC_VER
-#pragma pack(pop)
-#endif /* _MSC_VER */
-
 
 
 static void * eap_ttls_init(struct eap_sm *sm)
@@ -166,8 +146,8 @@ static void * eap_ttls_init(struct eap_sm *sm)
 	if (data->phase2_type == EAP_TTLS_PHASE2_EAP) {
 		if (eap_peer_select_phase2_methods(config, "autheap=",
 						   &data->phase2_eap_types,
-						   &data->num_phase2_eap_types)
-		    < 0) {
+						   &data->num_phase2_eap_types,
+						   0) < 0) {
 			eap_ttls_deinit(sm, data);
 			return NULL;
 		}
@@ -284,56 +264,26 @@ static int eap_ttls_avp_encapsulate(struct wpabuf **resp, u32 avp_code,
 	return 0;
 }
 
-/* chop up resp into multiple vsa's as necessary*/
-static int eap_ttls_avp_radius_vsa_encapsulate(struct wpabuf **resp, u32 vendor,
-					u8 attr, int mandatory)
-{
-	struct wpabuf *msg;
-	u8 *avp, *pos, *src, *final;
-	size_t size = wpabuf_len(*resp);
-	size_t num_msgs = 1 + (size / 248);
-	size_t msg_wrapper_size = sizeof(struct ttls_avp_vendor) + 6;
-	size_t allocated_total = num_msgs * (4 + msg_wrapper_size) + size;
-
-	msg = wpabuf_alloc(allocated_total);
-	if (msg == NULL) {
-		wpabuf_free(*resp);
-		*resp = NULL;
-		return -1;
-	}
-	src = wpabuf_mhead(*resp);
-	avp = wpabuf_mhead(msg);
-	while (size > 0) {
-		int avp_size = size > 248 ? 248 : size;
-		size -= avp_size;
-		pos = eap_ttls_avp_hdr(avp, RADIUS_ATTR_VENDOR_SPECIFIC, 0, mandatory,
-				       avp_size+6);
-		wpabuf_put(msg, pos-avp);
-		wpabuf_put_be32(msg, vendor);
-		wpabuf_put_u8(msg, (u8) attr);
-		wpabuf_put_u8(msg, (u8) avp_size+2);
-		wpabuf_put_data(msg, src, avp_size);
-		src += avp_size;
-		pos = wpabuf_mhead_u8(msg) + wpabuf_len(msg);
-		final = pos; /*keep pos so we know how much padding is added*/
-		AVP_PAD(avp, final); /*final modified*/
-		if (final > pos)
-			wpabuf_put(msg, final-pos);
-		avp = final;
-	}
-	/* check avp-wpabuf_mhead(msg) < allocated_total */
-	wpabuf_free(*resp);
-	*resp = msg;
-	return 0;
-}
 
 static int eap_ttls_v0_derive_key(struct eap_sm *sm,
 				  struct eap_ttls_data *data)
 {
+	const char *label;
+	const u8 eap_tls13_context[1] = { EAP_TYPE_TTLS };
+	const u8 *context = NULL;
+	size_t context_len = 0;
+
+	if (data->ssl.tls_v13) {
+		label = "EXPORTER_EAP_TLS_Key_Material";
+		context = eap_tls13_context;
+		context_len = sizeof(eap_tls13_context);
+	} else {
+		label = "ttls keying material";
+	}
+
 	eap_ttls_free_key(data);
-	data->key_data = eap_peer_tls_derive_key(sm, &data->ssl,
-						 "ttls keying material",
-						 NULL, 0,
+	data->key_data = eap_peer_tls_derive_key(sm, &data->ssl, label,
+						 context, context_len,
 						 EAP_TLS_KEY_LEN +
 						 EAP_EMSK_LEN);
 	if (!data->key_data) {
@@ -373,11 +323,11 @@ static u8 * eap_ttls_implicit_challenge(struct eap_sm *sm,
 
 
 static void eap_ttls_phase2_select_eap_method(struct eap_ttls_data *data,
-					      u8 method)
+					      int vendor, enum eap_type method)
 {
 	size_t i;
 	for (i = 0; i < data->num_phase2_eap_types; i++) {
-		if (data->phase2_eap_types[i].vendor != EAP_VENDOR_IETF ||
+		if (data->phase2_eap_types[i].vendor != vendor ||
 		    data->phase2_eap_types[i].method != method)
 			continue;
 
@@ -424,17 +374,19 @@ static int eap_ttls_phase2_request_eap_method(struct eap_sm *sm,
 					      struct eap_ttls_data *data,
 					      struct eap_method_ret *ret,
 					      struct eap_hdr *hdr, size_t len,
-					      u8 method, struct wpabuf **resp)
+					      int vendor, enum eap_type method,
+					      struct wpabuf **resp)
 {
 #ifdef EAP_TNC
 	if (data->tnc_started && data->phase2_method &&
-	    data->phase2_priv && method == EAP_TYPE_TNC &&
+	    data->phase2_priv &&
+	    vendor == EAP_VENDOR_IETF && method == EAP_TYPE_TNC &&
 	    data->phase2_eap_type.method == EAP_TYPE_TNC)
 		return eap_ttls_phase2_eap_process(sm, data, ret, hdr, len,
 						   resp);
 
 	if (data->ready_for_tnc && !data->tnc_started &&
-	    method == EAP_TYPE_TNC) {
+	    vendor == EAP_VENDOR_IETF && method == EAP_TYPE_TNC) {
 		wpa_printf(MSG_DEBUG, "EAP-TTLS: Start TNC after completed "
 			   "EAP method");
 		data->tnc_started = 1;
@@ -448,7 +400,7 @@ static int eap_ttls_phase2_request_eap_method(struct eap_sm *sm,
 			return -1;
 		}
 
-		data->phase2_eap_type.vendor = EAP_VENDOR_IETF;
+		data->phase2_eap_type.vendor = vendor;
 		data->phase2_eap_type.method = method;
 		wpa_printf(MSG_DEBUG, "EAP-TTLS: Selected "
 			   "Phase 2 EAP vendor %d method %d (TNC)",
@@ -462,10 +414,11 @@ static int eap_ttls_phase2_request_eap_method(struct eap_sm *sm,
 
 	if (data->phase2_eap_type.vendor == EAP_VENDOR_IETF &&
 	    data->phase2_eap_type.method == EAP_TYPE_NONE)
-		eap_ttls_phase2_select_eap_method(data, method);
+		eap_ttls_phase2_select_eap_method(data, vendor, method);
 
-	if (method != data->phase2_eap_type.method || method == EAP_TYPE_NONE)
-	{
+	if (vendor != data->phase2_eap_type.vendor ||
+	    method != data->phase2_eap_type.method ||
+	    (vendor == EAP_VENDOR_IETF && method == EAP_TYPE_NONE)) {
 		if (eap_peer_tls_phase2_nak(data->phase2_eap_types,
 					    data->num_phase2_eap_types,
 					    hdr, resp))
@@ -474,8 +427,7 @@ static int eap_ttls_phase2_request_eap_method(struct eap_sm *sm,
 	}
 
 	if (data->phase2_priv == NULL) {
-		data->phase2_method = eap_peer_get_eap_method(
-			EAP_VENDOR_IETF, method);
+		data->phase2_method = eap_peer_get_eap_method(vendor, method);
 		if (data->phase2_method) {
 			sm->init_phase2 = 1;
 			data->phase2_priv = data->phase2_method->init(sm);
@@ -483,8 +435,9 @@ static int eap_ttls_phase2_request_eap_method(struct eap_sm *sm,
 		}
 	}
 	if (data->phase2_priv == NULL || data->phase2_method == NULL) {
-		wpa_printf(MSG_INFO, "EAP-TTLS: failed to initialize "
-			   "Phase 2 EAP method %d", method);
+		wpa_printf(MSG_INFO,
+			   "EAP-TTLS: failed to initialize Phase 2 EAP method %u:%u",
+			   vendor, method);
 		return -1;
 	}
 
@@ -513,9 +466,23 @@ static int eap_ttls_phase2_request_eap(struct eap_sm *sm,
 	case EAP_TYPE_IDENTITY:
 		*resp = eap_sm_buildIdentity(sm, hdr->identifier, 1);
 		break;
+	case EAP_TYPE_EXPANDED:
+		if (len < sizeof(struct eap_hdr) + 8) {
+			wpa_printf(MSG_INFO,
+				   "EAP-TTLS: Too short Phase 2 request (expanded header) (len=%lu)",
+				   (unsigned long) len);
+			return -1;
+		}
+		if (eap_ttls_phase2_request_eap_method(sm, data, ret, hdr, len,
+						       WPA_GET_BE24(pos + 1),
+						       WPA_GET_BE32(pos + 4),
+						       resp) < 0)
+			return -1;
+		break;
 	default:
 		if (eap_ttls_phase2_request_eap_method(sm, data, ret, hdr, len,
-						       *pos, resp) < 0)
+						       EAP_VENDOR_IETF, *pos,
+						       resp) < 0)
 			return -1;
 		break;
 	}
@@ -941,8 +908,6 @@ struct ttls_parse_avp {
 	u8 *mschapv2;
 	u8 *eapdata;
 	size_t eap_len;
-	u8 *chbind_data;
-	size_t chbind_len;
 	int mschapv2_error;
 };
 
@@ -969,38 +934,6 @@ static int eap_ttls_parse_attr_eap(const u8 *dpos, size_t dlen,
 		os_memcpy(neweap + parse->eap_len, dpos, dlen);
 		parse->eapdata = neweap;
 		parse->eap_len += dlen;
-	}
-
-	return 0;
-}
-
-
-static int eap_ttls_parse_attr_chbind(const u8 *dpos, size_t dlen,
-				   struct ttls_parse_avp *parse)
-{
-	wpa_printf(MSG_DEBUG, "EAP-TTLS: AVP - Channel Binding Message");
-
-	if (parse->chbind_data == NULL) {
-		parse->chbind_data = os_malloc(dlen);
-		if (parse->chbind_data == NULL) {
-			wpa_printf(MSG_WARNING, "EAP-TTLS: Failed to allocate "
-				   "memory for Phase 2 channel binding data");
-			return -1;
-		}
-		os_memcpy(parse->chbind_data, dpos, dlen);
-		parse->chbind_len = dlen;
-	} else {
-        /* TODO: can this really happen?  maybe just make this an error? */
-		u8 *newchbind = os_realloc(parse->chbind_data,
-					   parse->chbind_len + dlen);
-		if (newchbind == NULL) {
-			wpa_printf(MSG_WARNING, "EAP-TTLS: Failed to allocate "
-				   "memory for Phase 2 channel binding data");
-			return -1;
-		}
-		os_memcpy(newchbind + parse->chbind_len, dpos, dlen);
-		parse->chbind_data = newchbind;
-		parse->chbind_len += dlen;
 	}
 
 	return 0;
@@ -1056,11 +989,6 @@ static int eap_ttls_parse_avp(u8 *pos, size_t left,
 
 	if (vendor_id == 0 && avp_code == RADIUS_ATTR_EAP_MESSAGE) {
 		if (eap_ttls_parse_attr_eap(dpos, dlen, parse) < 0)
-			return -1;
-	} else if (vendor_id == RADIUS_VENDOR_ID_UKERNA &&
-		   avp_code == RADIUS_ATTR_UKERNA_CHBIND) {
-		/* message containing channel binding data */
-		if (eap_ttls_parse_attr_chbind(dpos, dlen, parse) < 0)
 			return -1;
 	} else if (vendor_id == 0 && avp_code == RADIUS_ATTR_REPLY_MESSAGE) {
 		/* This is an optional message that can be displayed to
@@ -1184,111 +1112,6 @@ static int eap_ttls_encrypt_response(struct eap_sm *sm,
 	return 0;
 }
 
-static int eap_ttls_add_chbind_request(struct eap_sm *sm,
-				       struct eap_ttls_data *data,
-				       struct wpabuf **resp)
-{
-	struct wpabuf *chbind_req;
-	int length = 1, i;
-	struct eap_peer_config *config = eap_get_config(sm);
-
-	if (!config->chbind_config || config->chbind_config_len <= 0)
-		return -1;
-
-	for (i=0; i<config->chbind_config_len; i++) {
-		length += 3 + config->chbind_config[i].req_data_len;
-	}
-
-	chbind_req = wpabuf_alloc(length);
-	if (!chbind_req)
-		return -1;
-
-	wpabuf_put_u8(chbind_req, CHBIND_CODE_REQUEST);
-	for (i=0; i<config->chbind_config_len; i++) {
-		struct eap_peer_chbind_config *chbind_config =
-			&config->chbind_config[i];
-		wpabuf_put_be16(chbind_req, chbind_config->req_data_len);
-		wpabuf_put_u8(chbind_req, chbind_config->nsid);
-		wpabuf_put_data(chbind_req, chbind_config->req_data,
-				chbind_config->req_data_len);
-	}
-	if (eap_ttls_avp_radius_vsa_encapsulate(&chbind_req,
-					 RADIUS_VENDOR_ID_UKERNA,
-					 RADIUS_ATTR_UKERNA_CHBIND, 0) < 0)
-		return -1;
-
-	/* bleh. This will free *resp regardless of whether combined buffer
-	   alloc succeeds, which is not consistent with the other error
-	   condition behavior in this function */
-	*resp = wpabuf_concat(chbind_req, *resp);
-
-	return (*resp) ? 0 : -1;
-}
-
-
-static int eap_ttls_process_chbind(struct eap_sm *sm,
-				   struct eap_ttls_data *data,
-				   struct eap_method_ret *ret,
-				   struct ttls_parse_avp *parse,
-				   struct wpabuf **resp)
-{
-	size_t pos=0;
-	u8 code;
-	u16 len;
-	struct chbind_hdr *hdr;
-	struct eap_peer_config *config = eap_get_config(sm);
-	int i, found;
-
-
-	if (parse->chbind_data == NULL) {
-		wpa_printf(MSG_WARNING, "EAP-TTLS: No channel binding message "
-			   "in the packet - dropped");
-		return -1;
-	}
-	if (parse->chbind_len < 1 ) {
-		wpa_printf(MSG_WARNING, "EAP-TTLS: bad channel binding response "
-			   "frame (len=%lu, expected %lu or more) - dropped",
-			   (unsigned long) parse->chbind_len,
-			   (unsigned long) 1);
-		return -1;
-	}
-	code = parse->chbind_data[pos++];
-	for (i=0; i<config->chbind_config_len; i++) {
-		struct eap_peer_chbind_config *chbind_config =
-			&config->chbind_config[i];
-		pos = 1;
-		found = 0;
-		while (pos+sizeof(*hdr) < parse->chbind_len) {
-			hdr = (struct chbind_hdr *)(&parse->chbind_data[pos]);
-			pos += sizeof(*hdr);
-			len = be_to_host16(hdr->len);
-			if (pos + len <= parse->chbind_len) {
-				if (chbind_config->nsid == hdr->nsid)
-					chbind_config->response_cb(
-								   chbind_config->ctx,
-								   code, hdr->nsid,
-								   &parse->chbind_data[pos], len);
-				found  = 1;
-			}
-			pos += len;
-		}
-		if (pos != parse->chbind_len) {
-			wpa_printf(MSG_WARNING, "EAP-TTLS: bad channel binding response "
-				   "frame (parsed len=%lu, expected %lu) - dropped",
-				   (unsigned long) pos,
-				   (unsigned long) parse->chbind_len);
-			return -1;
-		}
-		if (!found) {
-			chbind_config->response_cb(
-						   chbind_config->ctx,
-						   code, chbind_config->nsid,
-						   NULL, 0);
-		}
-
-	}
-	return 0;
-}
 
 static int eap_ttls_process_phase2_eap(struct eap_sm *sm,
 				       struct eap_ttls_data *data,
@@ -1457,19 +1280,6 @@ static int eap_ttls_process_decrypted(struct eap_sm *sm,
 		phase2_type = EAP_TTLS_PHASE2_EAP;
 #endif /* EAP_TNC */
 
-	/* handle channel binding response here */
-	if (parse->chbind_data) {
-		/* received channel binding repsonse */
-		if (eap_ttls_process_chbind(sm, data, ret, parse, &resp) < 0)
-			return -1;
-		if (data->done_butfor_cb) {
-			ret->methodState = METHOD_DONE;
-			ret->decision = data->cbDecision;
-			data->phase2_success = 1;
-			return 1; /*request ack*/
-		}
-	}
-
 	switch (phase2_type) {
 	case EAP_TTLS_PHASE2_EAP:
 		if (eap_ttls_process_phase2_eap(sm, data, ret, parse, &resp) <
@@ -1509,33 +1319,17 @@ static int eap_ttls_process_decrypted(struct eap_sm *sm,
 #endif /* EAP_TNC */
 	}
 
-	if (!resp && (config->pending_req_identity ||
-			config->pending_req_password ||
-			config->pending_req_otp ||
-			config->pending_req_new_password ||
-			config->pending_req_sim)) {
-		wpabuf_clear_free(data->pending_phase2_req);
-		data->pending_phase2_req = wpabuf_dup(in_decrypted);
-		return 0;
-	}
-
-	/* issue channel binding request when appropriate */
-	if (config->chbind_config && config->chbind_config_len > 0 &&
-		!data->chbind_req_sent) {
-		if (eap_ttls_add_chbind_request(sm, data, &resp) < 0)
-			return -1;
-		data->chbind_req_sent = 1;
-		if (ret->methodState == METHOD_DONE) {
-			data->done_butfor_cb = 1;
-			data->cbDecision = ret->decision;
-			ret->methodState = METHOD_MAY_CONT;
-		}
-	}
-
 	if (resp) {
 		if (eap_ttls_encrypt_response(sm, data, resp, identifier,
 					      out_data) < 0)
 			return -1;
+	} else if (config->pending_req_identity ||
+		   config->pending_req_password ||
+		   config->pending_req_otp ||
+		   config->pending_req_new_password ||
+		   config->pending_req_sim) {
+		wpabuf_clear_free(data->pending_phase2_req);
+		data->pending_phase2_req = wpabuf_dup(in_decrypted);
 	}
 
 	return 0;
@@ -1659,6 +1453,7 @@ static int eap_ttls_decrypt(struct eap_sm *sm, struct eap_ttls_data *data,
 
 	if ((in_data == NULL || wpabuf_len(in_data) == 0) &&
 	    data->phase2_start) {
+start:
 		return eap_ttls_phase2_start(sm, data, ret, identifier,
 					     out_data);
 	}
@@ -1673,6 +1468,20 @@ static int eap_ttls_decrypt(struct eap_sm *sm, struct eap_ttls_data *data,
 	retval = eap_peer_tls_decrypt(sm, &data->ssl, in_data, &in_decrypted);
 	if (retval)
 		goto done;
+	if (wpabuf_len(in_decrypted) == 0) {
+		wpabuf_free(in_decrypted);
+		goto start;
+	}
+
+	/* draft-ietf-emu-eap-tls13-13 Section 2.5 */
+	if (data->ssl.tls_v13 && wpabuf_len(in_decrypted) == 1 &&
+	    *wpabuf_head_u8(in_decrypted) == 0) {
+		wpa_printf(MSG_DEBUG,
+			   "EAP-TTLS: ACKing EAP-TLS Commitment Message");
+		eap_peer_tls_reset_output(&data->ssl);
+		wpabuf_free(in_decrypted);
+		return 1;
+	}
 
 continue_req:
 	data->phase2_start = 0;
@@ -1796,7 +1605,7 @@ static void eap_ttls_check_auth_status(struct eap_sm *sm,
 				       struct eap_method_ret *ret)
 {
 	if (ret->methodState == METHOD_DONE) {
-		ret->allowNotifications = FALSE;
+		ret->allowNotifications = false;
 		if (ret->decision == DECISION_UNCOND_SUCC ||
 		    ret->decision == DECISION_COND_SUCC) {
 			wpa_printf(MSG_DEBUG, "EAP-TTLS: Authentication "
@@ -1891,7 +1700,7 @@ static struct wpabuf * eap_ttls_process(struct eap_sm *sm, void *priv,
 }
 
 
-static Boolean eap_ttls_has_reauth_data(struct eap_sm *sm, void *priv)
+static bool eap_ttls_has_reauth_data(struct eap_sm *sm, void *priv)
 {
 	struct eap_ttls_data *data = priv;
 	return tls_connection_established(sm->ssl_ctx, data->ssl.conn) &&
@@ -1982,7 +1791,7 @@ static int eap_ttls_get_status(struct eap_sm *sm, void *priv, char *buf,
 }
 
 
-static Boolean eap_ttls_isKeyAvailable(struct eap_sm *sm, void *priv)
+static bool eap_ttls_isKeyAvailable(struct eap_sm *sm, void *priv)
 {
 	struct eap_ttls_data *data = priv;
 	return data->key_data != NULL && data->phase2_success;

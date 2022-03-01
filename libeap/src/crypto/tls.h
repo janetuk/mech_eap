@@ -9,8 +9,6 @@
 #ifndef TLS_H
 #define TLS_H
 
-#include <openssl/x509.h>
-
 struct tls_connection;
 
 struct tls_random {
@@ -115,8 +113,6 @@ struct tls_config {
 #define TLS_CONN_ENABLE_TLSv1_2 BIT(16)
 #define TLS_CONN_TEAP_ANON_DH BIT(17)
 
-struct X509; /* from OpenSSL */
-
 /**
  * struct tls_connection_params - Parameters for TLS connection
  * @ca_cert: File or reference name for CA X.509 certificate in PEM or DER
@@ -173,9 +169,6 @@ struct X509; /* from OpenSSL */
  *	response list (OCSPResponseList for ocsp_multi in RFC 6961) or %NULL if
  *	ocsp_multi is not enabled
  * @check_cert_subject: Client certificate subject name matching string
- * @server_cert_cb: Optional callback to be used to validate server certificate
- *  when no CA or path was specified. 
- * @server_cert_ctx: Optional context arg for server_cert_cb.
  *
  * TLS connection parameters to be configured with tls_connection_set_params()
  * and tls_global_set_params().
@@ -222,8 +215,6 @@ struct tls_connection_params {
 	const char *ocsp_stapling_response;
 	const char *ocsp_stapling_response_multi;
 	const char *check_cert_subject;
-    int (*server_cert_cb)(int ok_so_far, X509* cert, void *ca_ctx);
-    void *server_cert_ctx;
 };
 
 
@@ -678,5 +669,19 @@ int tls_get_tls_unique(struct tls_connection *conn, u8 *buf, size_t max_len);
  * Returns: TLS cipher suite of the current connection or 0 on error
  */
 u16 tls_connection_get_cipher_suite(struct tls_connection *conn);
+
+/**
+ * tls_connection_get_peer_subject - Get peer subject
+ * @conn: Connection context data from tls_connection_init()
+ * Returns: Peer subject or %NULL if not authenticated or not available
+ */
+const char * tls_connection_get_peer_subject(struct tls_connection *conn);
+
+/**
+ * tls_connection_get_own_cert_used - Was own certificate used
+ * @conn: Connection context data from tls_connection_init()
+ * Returns: true if own certificate was used during authentication
+ */
+bool tls_connection_get_own_cert_used(struct tls_connection *conn);
 
 #endif /* TLS_H */

@@ -9,10 +9,6 @@
 #ifndef EAP_IKEV2_COMMON_H
 #define EAP_IKEV2_COMMON_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define IKEV2_FLAGS_LENGTH_INCLUDED 0x80
 #define IKEV2_FLAGS_MORE_FRAGMENTS 0x40
 #define IKEV2_FLAGS_ICV_INCLUDED 0x20
@@ -29,9 +25,5 @@ struct wpabuf * eap_ikev2_build_frag_ack(u8 id, u8 code);
 int eap_ikev2_validate_icv(int integ_alg, struct ikev2_keys *keys,
 			   int initiator, const struct wpabuf *msg,
 			   const u8 *pos, const u8 *end);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* EAP_IKEV2_COMMON_H */

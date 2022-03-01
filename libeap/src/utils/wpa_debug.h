@@ -11,16 +11,10 @@
 
 #include "wpabuf.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 extern int wpa_debug_level;
 extern int wpa_debug_show_keys;
 extern int wpa_debug_timestamp;
-#ifdef CONFIG_DEBUG_SYSLOG
 extern int wpa_debug_syslog;
-#endif /* CONFIG_DEBUG_SYSLOG */
 
 /* Debugging function - conditional printf and hex dump. Driver wrappers can
  * use these for debugging purposes. */
@@ -309,7 +303,6 @@ void hostapd_logger_register_cb(hostapd_logger_cb_func func);
 #define HOSTAPD_MODULE_RADIUS		0x00000004
 #define HOSTAPD_MODULE_WPA		0x00000008
 #define HOSTAPD_MODULE_DRIVER		0x00000010
-#define HOSTAPD_MODULE_IAPP		0x00000020
 #define HOSTAPD_MODULE_MLME		0x00000040
 
 enum hostapd_logger_level {
@@ -373,9 +366,5 @@ static inline void wpa_debug_close_linux_tracing(void)
 
 const char * debug_level_str(int level);
 int str_to_debug_level(const char *s);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* WPA_DEBUG_H */

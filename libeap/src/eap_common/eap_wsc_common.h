@@ -9,10 +9,6 @@
 #ifndef EAP_WSC_COMMON_H
 #define EAP_WSC_COMMON_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define EAP_VENDOR_TYPE_WSC 1
 
 #define WSC_FLAGS_MF 0x01
@@ -27,9 +23,5 @@ extern "C" {
 
 
 struct wpabuf * eap_wsc_build_frag_ack(u8 id, u8 code);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* EAP_WSC_COMMON_H */
