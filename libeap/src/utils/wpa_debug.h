@@ -18,10 +18,7 @@ extern "C" {
 extern int wpa_debug_level;
 extern int wpa_debug_show_keys;
 extern int wpa_debug_timestamp;
-#ifdef CONFIG_DEBUG_SYSLOG
 extern int wpa_debug_syslog;
-#endif /* CONFIG_DEBUG_SYSLOG */
-
 
 /* Debugging function - conditional printf and hex dump. Driver wrappers can
  * use these for debugging purposes. */
@@ -96,8 +93,6 @@ void wpa_hexdump(int level, const char *title, const void *buf, size_t len);
 static inline void wpa_hexdump_buf(int level, const char *title,
 				   const struct wpabuf *buf)
 {
-//!!LOCAL 	wpa_hexdump(level, title, (const u8 *)wpabuf_head(buf), wpabuf_len(buf));
-
 	wpa_hexdump(level, title, buf ? wpabuf_head(buf) : NULL,
 		    buf ? wpabuf_len(buf) : 0);
 }
@@ -120,8 +115,6 @@ void wpa_hexdump_key(int level, const char *title, const void *buf, size_t len);
 static inline void wpa_hexdump_buf_key(int level, const char *title,
 				       const struct wpabuf *buf)
 {
-//!! LOCAL 	wpa_hexdump_key(level, title, (const u8 *)wpabuf_head(buf), wpabuf_len(buf));
-
 	wpa_hexdump_key(level, title, buf ? wpabuf_head(buf) : NULL,
 			buf ? wpabuf_len(buf) : 0);
 }
@@ -314,7 +307,6 @@ void hostapd_logger_register_cb(hostapd_logger_cb_func func);
 #define HOSTAPD_MODULE_RADIUS		0x00000004
 #define HOSTAPD_MODULE_WPA		0x00000008
 #define HOSTAPD_MODULE_DRIVER		0x00000010
-#define HOSTAPD_MODULE_IAPP		0x00000020
 #define HOSTAPD_MODULE_MLME		0x00000040
 
 enum hostapd_logger_level {
