@@ -19,6 +19,7 @@ extern "C" {
 struct erp_tlvs {
 	const u8 *keyname;
 	const u8 *domain;
+
 	u8 keyname_len;
 	u8 domain_len;
 };

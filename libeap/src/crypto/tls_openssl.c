@@ -2347,11 +2347,8 @@ static int tls_verify_cb(int preverify_ok, X509_STORE_CTX *x509_ctx)
 
 	if (!preverify_ok && !conn->ca_cert_verify)
 		preverify_ok = 1;
-
-	if (!preverify_ok && depth > 0 && conn->server_cert_only) {
-        /* wpa_printf(MSG_DEBUG, "TLS: tls_verify_cb: allowing cert because depth > 0 && conn->server_cert_only\n"); */
+	if (!preverify_ok && depth > 0 && conn->server_cert_only)
 		preverify_ok = 1;
-    }
 	if (!preverify_ok && (conn->flags & TLS_CONN_DISABLE_TIME_CHECKS) &&
 	    (err == X509_V_ERR_CERT_HAS_EXPIRED ||
 	     err == X509_V_ERR_CERT_NOT_YET_VALID)) {
@@ -5230,6 +5227,7 @@ static void openssl_debug_dump_certificate_chains(SSL_CTX *ssl_ctx)
 {
 #if !defined(LIBRESSL_VERSION_NUMBER) && !defined(BORINGSSL_API_VERSION) && OPENSSL_VERSION_NUMBER >= 0x10002000L
 	int res;
+
 	for (res = SSL_CTX_set_current_cert(ssl_ctx, SSL_CERT_SET_FIRST);
 	     res == 1;
 	     res = SSL_CTX_set_current_cert(ssl_ctx, SSL_CERT_SET_NEXT))

@@ -29,7 +29,6 @@ struct ttls_avp_vendor {
 	/* Data */
 };
 
-
 #define AVP_FLAGS_VENDOR 0x80
 #define AVP_FLAGS_MANDATORY 0x40
 

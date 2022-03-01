@@ -22,7 +22,6 @@ extern int wpa_debug_timestamp;
 extern int wpa_debug_syslog;
 #endif /* CONFIG_DEBUG_SYSLOG */
 
-
 /* Debugging function - conditional printf and hex dump. Driver wrappers can
  * use these for debugging purposes. */
 
@@ -96,8 +95,6 @@ void wpa_hexdump(int level, const char *title, const void *buf, size_t len);
 static inline void wpa_hexdump_buf(int level, const char *title,
 				   const struct wpabuf *buf)
 {
-//!!LOCAL 	wpa_hexdump(level, title, (const u8 *)wpabuf_head(buf), wpabuf_len(buf));
-
 	wpa_hexdump(level, title, buf ? wpabuf_head(buf) : NULL,
 		    buf ? wpabuf_len(buf) : 0);
 }
@@ -120,8 +117,6 @@ void wpa_hexdump_key(int level, const char *title, const void *buf, size_t len);
 static inline void wpa_hexdump_buf_key(int level, const char *title,
 				       const struct wpabuf *buf)
 {
-//!! LOCAL 	wpa_hexdump_key(level, title, (const u8 *)wpabuf_head(buf), wpabuf_len(buf));
-
 	wpa_hexdump_key(level, title, buf ? wpabuf_head(buf) : NULL,
 			buf ? wpabuf_len(buf) : 0);
 }
