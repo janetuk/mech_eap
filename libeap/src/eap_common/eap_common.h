@@ -11,6 +11,11 @@
 
 #include "wpabuf.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 struct erp_tlvs {
 	const u8 *keyname;
 	const u8 *domain;
@@ -29,5 +34,9 @@ u8 eap_get_id(const struct wpabuf *msg);
 enum eap_type eap_get_type(const struct wpabuf *msg);
 int erp_parse_tlvs(const u8 *pos, const u8 *end, struct erp_tlvs *tlvs,
 		   int stop_at_keyname);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* EAP_COMMON_H */

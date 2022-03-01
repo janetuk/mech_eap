@@ -9,6 +9,10 @@
 #ifndef WPABUF_H
 #define WPABUF_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* wpabuf::buf is a pointer to external data */
 #define WPABUF_FLAG_EXT_DATA BIT(0)
 
@@ -187,5 +191,9 @@ static inline void wpabuf_put_str(struct wpabuf *dst, const char *str)
 {
 	wpabuf_put_data(dst, str, os_strlen(str));
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* WPABUF_H */

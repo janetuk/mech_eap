@@ -11,6 +11,10 @@
 
 #include "eap_common/eap_defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 const struct eap_method * eap_peer_get_eap_method(int vendor,
 						  enum eap_type method);
 const struct eap_method * eap_peer_get_methods(size_t *count);
@@ -71,12 +75,12 @@ int eap_peer_method_unload(struct eap_method *method);
 
 #else /* CONFIG_DYNAMIC_EAP_METHODS */
 
-static inline int eap_peer_method_load(const char *so)
+static inline int eap_peer_method_load(const char *so UNUSED)
 {
 	return 0;
 }
 
-static inline int eap_peer_method_unload(struct eap_method *method)
+static inline int eap_peer_method_unload(struct eap_method *method UNUSED)
 {
 	return 0;
 }
@@ -109,5 +113,9 @@ int eap_peer_vendor_test_register(void);
 int eap_peer_tnc_register(void);
 int eap_peer_pwd_register(void);
 int eap_peer_eke_register(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* EAP_METHODS_H */

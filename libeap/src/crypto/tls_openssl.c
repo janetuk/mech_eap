@@ -272,6 +272,9 @@ struct tls_connection {
 
 	u16 cipher_suite;
 	int server_dh_prime_len;
+
+    int (*server_cert_cb)(int ok_so_far, X509* cert, void *ca_ctx);
+    void *server_cert_ctx;
 };
 
 
@@ -1133,13 +1136,16 @@ void tls_deinit(void *ssl_ctx)
 #if OPENSSL_VERSION_NUMBER < 0x10100000L || \
 	(defined(LIBRESSL_VERSION_NUMBER) && \
 	 LIBRESSL_VERSION_NUMBER < 0x20700000L)
-#ifndef OPENSSL_NO_ENGINE
-		ENGINE_cleanup();
-#endif /* OPENSSL_NO_ENGINE */
-		CRYPTO_cleanup_all_ex_data();
+// The next four lines, and two more just below, deal with de-initializing
+// global state in the OpenSSL engine. We (Moonshot) don't want that, since
+// we use OpenSSL elsewhere in our apps (i.e., not only via hostap / libeap.)
+//// #ifndef OPENSSL_NO_ENGINE
+//// 		ENGINE_cleanup();
+//// #endif /* OPENSSL_NO_ENGINE */
+//// 		CRYPTO_cleanup_all_ex_data();
 		ERR_remove_thread_state(NULL);
-		ERR_free_strings();
-		EVP_cleanup();
+//// 		ERR_free_strings();
+//// 		EVP_cleanup();
 #endif /* < 1.1.0 */
 		os_free(tls_global->ocsp_stapling_response);
 		tls_global->ocsp_stapling_response = NULL;
@@ -2372,6 +2378,12 @@ static int tls_verify_cb(int preverify_ok, X509_STORE_CTX *x509_ctx)
 	else if (depth == 2)
 		conn->peer_issuer_issuer = err_cert;
 
+/*	wpa_printf(MSG_DEBUG, "TLS: tls_verify_cb(enter) - preverify_ok=%d "
+ *		   "err=%d (%s) ca_cert_verify=%d depth=%d buf='%s' server_cert_cb=%p server_cert_only=%d",
+ *		   preverify_ok, err, X509_verify_cert_error_string(err),
+ *               conn->ca_cert_verify, depth, buf, conn->server_cert_cb, conn->server_cert_only);
+ */
+
 	context = conn->context;
 	match = conn->subject_match;
 	altmatch = conn->altsubject_match;
@@ -2400,40 +2412,46 @@ static int tls_verify_cb(int preverify_ok, X509_STORE_CTX *x509_ctx)
 	err_str = X509_verify_cert_error_string(err);
 
 #ifdef CONFIG_SHA256
-	/*
-	 * Do not require preverify_ok so we can explicity allow otherwise
-	 * invalid pinned server certificates.
-	 */
-	if (depth == 0 && conn->server_cert_only) {
-		struct wpabuf *cert;
-		cert = get_x509_cert(err_cert);
-		if (!cert) {
-			wpa_printf(MSG_DEBUG, "OpenSSL: Could not fetch "
-				   "server certificate data");
-			preverify_ok = 0;
-		} else {
-			u8 hash[32];
-			const u8 *addr[1];
-			size_t len[1];
-			addr[0] = wpabuf_head(cert);
-			len[0] = wpabuf_len(cert);
-			if (sha256_vector(1, addr, len, hash) < 0 ||
-			    os_memcmp(conn->srv_cert_hash, hash, 32) != 0) {
-				err_str = "Server certificate mismatch";
-				err = X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN;
-				preverify_ok = 0;
-			} else if (!preverify_ok) {
-				/*
-				 * Certificate matches pinned certificate, allow
-				 * regardless of other problems.
-				 */
-				wpa_printf(MSG_DEBUG,
-					   "OpenSSL: Ignore validation issues for a pinned server certificate");
-				preverify_ok = 1;
-			}
-			wpabuf_free(cert);
-		}
-	}
+	if (depth == 0) {
+        if (conn->server_cert_cb && preverify_ok) {
+            preverify_ok = conn->server_cert_cb(preverify_ok, err_cert, conn->server_cert_ctx);
+            wpa_printf(MSG_DEBUG, "TLS: tls_verify_cb: server_cert_cb returned %d", preverify_ok);
+        }
+        if (!preverify_ok && conn->server_cert_only) {
+            /*
+             * Do not require preverify_ok so we can explicity allow otherwise
+             * invalid pinned server certificates.
+             */
+            struct wpabuf *cert;
+            cert = get_x509_cert(err_cert);
+            if (!cert) {
+                wpa_printf(MSG_DEBUG, "OpenSSL: Could not fetch "
+                           "server certificate data");
+                preverify_ok = 0;
+            } else {
+                u8 hash[32];
+                const u8 *addr[1];
+                size_t len[1];
+                addr[0] = wpabuf_head(cert);
+                len[0] = wpabuf_len(cert);
+                if (sha256_vector(1, addr, len, hash) < 0 ||
+                    os_memcmp(conn->srv_cert_hash, hash, 32) != 0) {
+                    err_str = "Server certificate mismatch";
+                    err = X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN;
+                    preverify_ok = 0;
+                } else if (!preverify_ok) {
+                    /*
+                     * Certificate matches pinned certificate, allow
+                     * regardless of other problems.
+                     */
+                    wpa_printf(MSG_DEBUG,
+                               "tls_verify_cb: OpenSSL: Ignore validation issues for a pinned server certificate");
+                    preverify_ok = 1;
+                }
+                wpabuf_free(cert);
+            }
+        }
+    }
 #endif /* CONFIG_SHA256 */
 
 	openssl_tls_cert_event(conn, err_cert, depth, buf);
@@ -2630,9 +2648,11 @@ static int tls_load_ca_der(struct tls_data *data, const char *ca_cert)
 
 
 static int tls_connection_ca_cert(struct tls_data *data,
-				  struct tls_connection *conn,
-				  const char *ca_cert, const u8 *ca_cert_blob,
-				  size_t ca_cert_blob_len, const char *ca_path)
+                                  struct tls_connection *conn,
+                                  const char *ca_cert, const u8 *ca_cert_blob,
+                                  size_t ca_cert_blob_len, const char *ca_path,
+                                  int (*server_cert_cb)(int ok_so_far, X509* cert, void *ca_ctx),
+                                  void *server_cert_ctx)
 {
 	SSL_CTX *ssl_ctx = data->ssl;
 	X509_STORE *store;
@@ -2651,6 +2671,8 @@ static int tls_connection_ca_cert(struct tls_data *data,
 
 	SSL_set_verify(conn->ssl, SSL_VERIFY_PEER, tls_verify_cb);
 	conn->ca_cert_verify = 1;
+    conn->server_cert_cb = server_cert_cb;
+    conn->server_cert_ctx = server_cert_ctx;
 
 	if (ca_cert && os_strncmp(ca_cert, "probe://", 8) == 0) {
 		wpa_printf(MSG_DEBUG, "OpenSSL: Probe for server certificate "
@@ -5197,9 +5219,11 @@ int tls_connection_set_params(void *tls_ctx, struct tls_connection *conn,
 		if (tls_connection_engine_ca_cert(data, conn, ca_cert_id))
 			return TLS_SET_PARAMS_ENGINE_PRV_VERIFY_FAILED;
 	} else if (tls_connection_ca_cert(data, conn, params->ca_cert,
-					  params->ca_cert_blob,
-					  params->ca_cert_blob_len,
-					  params->ca_path))
+                                   params->ca_cert_blob,
+                                   params->ca_cert_blob_len,
+                                   params->ca_path,
+								   params->server_cert_cb,
+                                   params->server_cert_ctx))
 		return -1;
 
 	if (engine_id && cert_id) {
@@ -5410,7 +5434,7 @@ static void openssl_debug_dump_certificates(SSL_CTX *ssl_ctx)
 
 static void openssl_debug_dump_certificate_chains(SSL_CTX *ssl_ctx)
 {
-#if !defined(LIBRESSL_VERSION_NUMBER) && !defined(BORINGSSL_API_VERSION)
+#if !defined(LIBRESSL_VERSION_NUMBER) && !defined(BORINGSSL_API_VERSION) && OPENSSL_VERSION_NUMBER >= 0x10002000L
 	int res;
 
 	for (res = SSL_CTX_set_current_cert(ssl_ctx, SSL_CERT_SET_FIRST);

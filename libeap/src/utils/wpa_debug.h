@@ -11,6 +11,10 @@
 
 #include "wpabuf.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern int wpa_debug_level;
 extern int wpa_debug_show_keys;
 extern int wpa_debug_timestamp;
@@ -366,5 +370,9 @@ static inline void wpa_debug_close_linux_tracing(void)
 
 const char * debug_level_str(int level);
 int str_to_debug_level(const char *s);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* WPA_DEBUG_H */

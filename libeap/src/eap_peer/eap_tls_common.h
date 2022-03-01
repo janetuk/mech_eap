@@ -9,6 +9,10 @@
 #ifndef EAP_TLS_COMMON_H
 #define EAP_TLS_COMMON_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * struct eap_ssl_data - TLS data for EAP methods
  */
@@ -136,5 +140,9 @@ int eap_peer_select_phase2_methods(struct eap_peer_config *config,
 				   size_t *num_types, int use_machine_cred);
 int eap_peer_tls_phase2_nak(struct eap_method_type *types, size_t num_types,
 			    struct eap_hdr *hdr, struct wpabuf **resp);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* EAP_TLS_COMMON_H */

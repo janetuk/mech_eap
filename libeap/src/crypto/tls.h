@@ -9,6 +9,8 @@
 #ifndef TLS_H
 #define TLS_H
 
+#include <openssl/x509.h>
+
 struct tls_connection;
 
 struct tls_random {
@@ -113,6 +115,8 @@ struct tls_config {
 #define TLS_CONN_ENABLE_TLSv1_2 BIT(16)
 #define TLS_CONN_TEAP_ANON_DH BIT(17)
 
+struct X509; /* from OpenSSL */
+
 /**
  * struct tls_connection_params - Parameters for TLS connection
  * @ca_cert: File or reference name for CA X.509 certificate in PEM or DER
@@ -169,6 +173,9 @@ struct tls_config {
  *	response list (OCSPResponseList for ocsp_multi in RFC 6961) or %NULL if
  *	ocsp_multi is not enabled
  * @check_cert_subject: Client certificate subject name matching string
+ * @server_cert_cb: Optional callback to be used to validate server certificate
+ *  when no CA or path was specified. 
+ * @server_cert_ctx: Optional context arg for server_cert_cb.
  *
  * TLS connection parameters to be configured with tls_connection_set_params()
  * and tls_global_set_params().
@@ -215,6 +222,8 @@ struct tls_connection_params {
 	const char *ocsp_stapling_response;
 	const char *ocsp_stapling_response_multi;
 	const char *check_cert_subject;
+    int (*server_cert_cb)(int ok_so_far, X509* cert, void *ca_ctx);
+    void *server_cert_ctx;
 };
 
 

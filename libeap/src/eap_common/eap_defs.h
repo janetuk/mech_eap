@@ -9,6 +9,10 @@
 #ifndef EAP_DEFS_H
 #define EAP_DEFS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* RFC 3748 - Extensible Authentication Protocol (EAP) */
 
 #ifdef _MSC_VER
@@ -115,5 +119,9 @@ enum {
 #define EAP_EMSK_LEN 64
 #define EAP_EMSK_NAME_LEN 8
 #define ERP_MAX_KEY_LEN 64
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* EAP_DEFS_H */

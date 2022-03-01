@@ -139,6 +139,8 @@ static void eap_tls_params_from_conf1(struct tls_connection_params *params,
 {
 	eap_tls_cert_params_from_conf(params, &config->cert);
 	eap_tls_params_flags(params, config->phase1);
+    params->server_cert_cb = config->server_cert_cb;
+    params->server_cert_ctx = config->server_cert_ctx;
 }
 
 
@@ -147,6 +149,8 @@ static void eap_tls_params_from_conf2(struct tls_connection_params *params,
 {
 	eap_tls_cert_params_from_conf(params, &config->phase2_cert);
 	eap_tls_params_flags(params, config->phase2);
+    params->server_cert_cb = config->server_cert_cb;
+    params->server_cert_ctx = config->server_cert_ctx;
 }
 
 
@@ -913,8 +917,10 @@ const u8 * eap_peer_tls_process_init(struct eap_sm *sm,
 
 	if (tls_get_errors(data->ssl_ctx)) {
 		wpa_printf(MSG_INFO, "SSL: TLS errors detected");
-		ret->ignore = true;
-		return NULL;
+        /* Next two lines commented out by Painless Security for Moonshot */
+	     /*	ret->ignore = true;
+	      *	return NULL;
+		  */
 	}
 
 	if (eap_type == EAP_UNAUTH_TLS_TYPE)

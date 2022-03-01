@@ -9,6 +9,10 @@
 #ifndef EAP_PWD_COMMON_H
 #define EAP_PWD_COMMON_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * definition of a finite cyclic group
  * TODO: support one based on a prime field
@@ -73,5 +77,9 @@ struct crypto_bignum * eap_pwd_get_scalar(EAP_PWD_group *group, const u8 *buf);
 int eap_pwd_get_rand_mask(EAP_PWD_group *group, struct crypto_bignum *_rand,
 			  struct crypto_bignum *_mask,
 			  struct crypto_bignum *scalar);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  /* EAP_PWD_COMMON_H */

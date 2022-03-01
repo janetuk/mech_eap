@@ -13,6 +13,10 @@
 #include "eap_common/eap_defs.h"
 #include "eap_peer/eap_methods.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct eap_sm;
 struct wpa_config_blob;
 struct wpabuf;
@@ -380,5 +384,9 @@ void eap_peer_erp_init(struct eap_sm *sm, u8 *ext_session_id,
 		       size_t ext_emsk_len);
 
 #endif /* IEEE8021X_EAPOL */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* EAP_H */

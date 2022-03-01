@@ -63,7 +63,12 @@ static inline unsigned int bswap_32(unsigned int v)
 #endif /* __rtems__ */
 
 #ifdef CONFIG_NATIVE_WINDOWS
+#ifdef CONFIG_IPV6
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <winsock.h>
+#endif
 
 typedef int socklen_t;
 
@@ -74,7 +79,9 @@ typedef int socklen_t;
 #endif /* CONFIG_NATIVE_WINDOWS */
 
 #ifdef _MSC_VER
+#ifndef __cplusplus
 #define inline __inline
+#endif
 
 #undef vsnprintf
 #define vsnprintf _vsnprintf
@@ -352,9 +359,11 @@ static inline void WPA_PUT_LE64(u8 *a, u64 val)
 #ifdef __GNUC__
 #define PRINTF_FORMAT(a,b) __attribute__ ((format (printf, (a), (b))))
 #define STRUCT_PACKED __attribute__ ((packed))
+#define UNUSED __attribute__ ((unused))
 #else
 #define PRINTF_FORMAT(a,b)
 #define STRUCT_PACKED
+#define UNUSED
 #endif
 
 

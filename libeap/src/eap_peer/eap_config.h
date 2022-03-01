@@ -9,6 +9,37 @@
 #ifndef EAP_CONFIG_H
 #define EAP_CONFIG_H
 
+#include <openssl/x509.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* http://tools.ietf.org/html/draft-ietf-emu-chbind-13#section-5.3.1 */
+#define CHBIND_CODE_REQUEST 1
+#define CHBIND_CODE_SUCCESS 2
+#define CHBIND_CODE_FAILURE 3
+/* http://tools.ietf.org/html/draft-ietf-emu-chbind-13#section-5.3. */
+#define CHBIND_NSID_RADIUS 1
+
+struct eap_peer_chbind_config
+{
+    /* namespace id for this channel binding info */
+    int nsid;
+
+    /* data to be sent in channel binding request */
+    u8 *req_data;
+
+    size_t req_data_len;
+
+    /* lower level callback invoked when response is received */
+    void (*response_cb)(void *ctx, int code, int nsid, u8 *resp_data, size_t resp_data_len);
+
+    /* context for response callback */
+    void *ctx;
+};
+
 /**
  * struct eap_peer_cert_config - EAP peer certificate configuration/credential
  */
@@ -638,6 +669,16 @@ struct eap_peer_config {
 	 */
 	int fragment_size;
 
+    /**
+     * chbind_config - eap channel binding config data
+     */
+    struct eap_peer_chbind_config *chbind_config;
+
+    /**
+     * chbind_config_len - channel binding config data count
+     */
+    size_t chbind_config_len;
+
 #define EAP_CONFIG_FLAGS_PASSWORD_NTHASH BIT(0)
 #define EAP_CONFIG_FLAGS_EXT_PASSWORD BIT(1)
 #define EAP_CONFIG_FLAGS_MACHINE_PASSWORD_NTHASH BIT(2)
@@ -704,6 +745,13 @@ struct eap_peer_config {
 	} pending_ext_cert_check;
 
 	int teap_anon_dh;
+
+    /**
+     * server_cert_cb -- if non-null, specifies a callback method that can
+     * be used to override the validity of a peer (server/acceptor) certificate.
+     */
+    int (*server_cert_cb)(int ok_so_far, X509* cert, void *ca_ctx);
+    void *server_cert_ctx;
 };
 
 
@@ -735,5 +783,9 @@ struct wpa_config_blob {
 	 */
 	struct wpa_config_blob *next;
 };
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* EAP_CONFIG_H */

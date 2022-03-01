@@ -9,6 +9,10 @@
 #ifndef EAP_TLV_COMMON_H
 #define EAP_TLV_COMMON_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* EAP-TLV TLVs (draft-josefsson-ppext-eap-tls-eap-10.txt) */
 #define EAP_TLV_RESULT_TLV 3 /* Acknowledged Result */
 #define EAP_TLV_NAK_TLV 4
@@ -108,5 +112,9 @@ struct eap_tlv_pac_type_tlv {
 
 #define EAP_TLV_ACTION_PROCESS_TLV 1
 #define EAP_TLV_ACTION_NEGOTIATE_EAP 2
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* EAP_TLV_COMMON_H */

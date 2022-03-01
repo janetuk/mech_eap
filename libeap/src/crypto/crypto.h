@@ -21,6 +21,11 @@
 #ifndef CRYPTO_H
 #define CRYPTO_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 /**
  * md4_vector - MD4 hash for data vector
  * @num_elem: Number of elements in the data vector
@@ -1274,5 +1279,9 @@ const u8 * crypto_csr_get_attribute(struct crypto_csr *csr,
 struct wpabuf * crypto_csr_sign(struct crypto_csr *csr,
 				struct crypto_ec_key *key,
 				enum crypto_hash_alg algo);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CRYPTO_H */

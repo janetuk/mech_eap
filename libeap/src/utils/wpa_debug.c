@@ -579,10 +579,10 @@ int wpa_debug_open_file(const char *path)
 	}
 #endif /* __linux__ */
 
-	out_file = fdopen(out_fd, "a");
+	out_file = fopen(path, "a");
 	if (out_file == NULL) {
 		wpa_printf(MSG_ERROR, "wpa_debug_open_file: Failed to open "
-			   "output file, using standard output");
+                   "output file %s, using standard output", path);
 		close(out_fd);
 		return -1;
 	}
